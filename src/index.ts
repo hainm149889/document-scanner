@@ -38,3 +38,4 @@ export type { DocumentScanner };
 export * from "./types";
 // Camera UI Component Export
 export * from "./components/DocumentCameraView";
+export * from "./components/ScannerOverlayFrame";

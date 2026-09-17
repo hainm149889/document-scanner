@@ -11,17 +11,19 @@ import {
 } from 'react-native';
 import {
   DocumentCameraView,
+  ScannerOverlayFrame,
   DocumentScannerNative,
   RNDocumentScannerVersion,
+  DocumentType,
 } from 'rn-document-scanner';
 
 function App(): React.JSX.Element {
   const [nativeVersion, setNativeVersion] = useState<string>('Loading...');
   const [enableFlash, setEnableFlash] = useState<boolean>(false);
   const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [documentType, setDocumentType] = useState<DocumentType>('cccd');
 
   useEffect(() => {
-    // 1. Kiểm tra và Yêu cầu quyền Camera
     const requestCameraPermission = async () => {
       if (Platform.OS === 'android') {
         try {
@@ -41,20 +43,12 @@ function App(): React.JSX.Element {
           setHasPermission(false);
         }
       } else {
-        // Trên iOS: Kiểm tra và yêu cầu quyền Camera qua DocumentScannerNative
-        try {
-          const granted = await DocumentScannerNative.requestCameraPermission();
-          setHasPermission(granted);
-        } catch (err) {
-          console.warn('Lỗi xin quyền iOS:', err);
-          setHasPermission(false);
-        }
+        setHasPermission(true);
       }
     };
 
     requestCameraPermission();
 
-    // 2. Lấy phiên bản Native Engine từ Nitro
     try {
       if (DocumentScannerNative) {
         const version = DocumentScannerNative.getNativeVersion();
@@ -69,6 +63,10 @@ function App(): React.JSX.Element {
     setEnableFlash(prev => !prev);
   };
 
+  const toggleDocumentType = () => {
+    setDocumentType(prev => (prev === 'cccd' ? 'passport' : 'cccd'));
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -81,10 +79,16 @@ function App(): React.JSX.Element {
         </Text>
       </View>
 
-      {/* Native Camera Preview View (Chỉ hiển thị khi đã được cấp quyền) */}
+      {/* Camera & Overlay Frame Container */}
       <View style={styles.cameraContainer}>
         {hasPermission ? (
-          <DocumentCameraView style={styles.camera} enableFlash={enableFlash} />
+          <View style={StyleSheet.absoluteFill}>
+            <DocumentCameraView
+              style={StyleSheet.absoluteFill}
+              enableFlash={enableFlash}
+            />
+            <ScannerOverlayFrame documentType={documentType} />
+          </View>
         ) : (
           <View style={styles.permissionDenied}>
             <Text style={styles.permissionText}>
@@ -96,9 +100,15 @@ function App(): React.JSX.Element {
 
       {/* Controls */}
       <View style={styles.controls}>
+        <TouchableOpacity style={styles.button} onPress={toggleDocumentType}>
+          <Text style={styles.buttonText}>
+            Loại: {documentType.toUpperCase()}
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[
-            styles.flashButton,
+            styles.button,
             enableFlash && styles.flashButtonActive,
             !hasPermission && styles.buttonDisabled,
           ]}
@@ -140,9 +150,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginHorizontal: 16,
-  },
-  camera: {
-    flex: 1,
+    position: 'relative',
   },
   permissionDenied: {
     flex: 1,
@@ -156,15 +164,19 @@ const styles = StyleSheet.create({
   },
   controls: {
     padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
-  flashButton: {
+  button: {
     backgroundColor: '#2c2c2e',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#3a3a3c',
+    minWidth: 120,
+    alignItems: 'center',
   },
   flashButtonActive: {
     backgroundColor: '#ffcc00',
