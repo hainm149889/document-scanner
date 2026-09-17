@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+lib/
+*.tgz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+Pods/
+Podfile.lock
+
+# Android
+.gradle/
+build/
+.cxx/
+*.apk
+*.aar
+
+# IDE
+.idea/
+.vscode/

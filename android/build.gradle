@@ -1,0 +1,82 @@
+buildscript {
+    ext {
+        buildToolsVersion = "34.0.0"
+        minSdkVersion = 24
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        kotlinVersion = "1.9.22"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.2.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+    }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply from: '../nitrogen/generated/android/RNDocumentScanner+autolinking.gradle'
+
+android {
+    compileSdkVersion rootProject.ext.has("compileSdkVersion") ? rootProject.ext.get("compileSdkVersion") : 34
+    buildToolsVersion rootProject.ext.has("buildToolsVersion") ? rootProject.ext.get("buildToolsVersion") : "34.0.0"
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.has("minSdkVersion") ? rootProject.ext.get("minSdkVersion") : 24
+        targetSdkVersion rootProject.ext.has("targetSdkVersion") ? rootProject.ext.get("targetSdkVersion") : 34
+        versionCode 1
+        versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared"
+                cppFlags "-frtti -fexceptions -Wall -Wextra"
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+        prefab true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    lintOptions {
+        disable "GradleCompatible"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    implementation "com.facebook.react:react-android"
+    implementation "com.facebook.fbjni:fbjni"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation project(":react-native-nitro-modules")
+}
