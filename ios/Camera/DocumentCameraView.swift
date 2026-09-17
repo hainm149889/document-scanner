@@ -2,10 +2,16 @@ import UIKit
 import AVFoundation
 
 @objc(DocumentCameraView)
-class DocumentCameraView: UIView {
+class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
     private var captureSession: AVCaptureSession?
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var videoDeviceInput: AVCaptureDeviceInput?
+    private var photoOutput: AVCapturePhotoOutput?
+
+    private var currentCompletion: ((Result<[String: Any], Error>) -> Void)?
+
+    // Static reference để HybridObject có thể gọi trực tiếp
+    static weak var sharedCurrentView: DocumentCameraView?
 
     @objc var enableFlash: Bool = false {
         didSet {
@@ -16,11 +22,13 @@ class DocumentCameraView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         checkPermissionAndSetup()
+        DocumentCameraView.sharedCurrentView = self
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         checkPermissionAndSetup()
+        DocumentCameraView.sharedCurrentView = self
     }
 
     override func layoutSubviews() {
@@ -66,6 +74,12 @@ class DocumentCameraView: UIView {
         session.addInput(videoInput)
         self.videoDeviceInput = videoInput
 
+        let output = AVCapturePhotoOutput()
+        if session.canAddOutput(output) {
+            session.addOutput(output)
+            self.photoOutput = output
+        }
+
         let preview = AVCaptureVideoPreviewLayer(session: session)
         preview.videoGravity = .resizeAspectFill
         layer.addSublayer(preview)
@@ -91,7 +105,59 @@ class DocumentCameraView: UIView {
         }
     }
 
+    func capture(enableFlash: Bool, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+        guard let photoOutput = self.photoOutput else {
+            completion(.failure(NSError(domain: "DocumentCameraView", code: -1, userInfo: [NSLocalizedDescriptionKey: "Photo output unavailable"])))
+            return
+        }
+
+        self.currentCompletion = completion
+
+        let settings = AVCapturePhotoSettings()
+        if videoDeviceInput?.device.hasFlash == true {
+            settings.flashMode = enableFlash ? .on : .off
+        }
+
+        photoOutput.capturePhoto(with: settings, delegate: self)
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        if let error = error {
+            currentCompletion?(.failure(error))
+            currentCompletion = nil
+            return
+        }
+
+        guard let imageData = photo.fileDataRepresentation(),
+              let image = UIImage(data: imageData) else {
+            currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to process image data"])))
+            currentCompletion = nil
+            return
+        }
+
+        // Lưu ảnh vào thư mục Temp
+        let fileName = "scan_\(UUID().uuidString).jpg"
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try imageData.write(to: fileURL)
+            let result: [String: Any] = [
+                "imageUri": fileURL.absoluteString,
+                "width": Double(image.size.width * image.scale),
+                "height": Double(image.size.height * image.scale),
+                "orientation": 0
+            ]
+            currentCompletion?(.success(result))
+        } catch {
+            currentCompletion?(.failure(error))
+        }
+        currentCompletion = nil
+    }
+
     deinit {
         captureSession?.stopRunning()
+        if DocumentCameraView.sharedCurrentView === self {
+            DocumentCameraView.sharedCurrentView = nil
+        }
     }
 }

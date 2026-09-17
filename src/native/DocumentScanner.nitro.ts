@@ -1,5 +1,17 @@
 import type { HybridObject } from "react-native-nitro-modules";
 
+export interface NativeCapturedDocument {
+  imageUri: string;
+  width: number;
+  height: number;
+  orientation: number;
+}
+
+export interface NativeCaptureOptions {
+  enableFlash?: boolean;
+  quality?: number;
+}
+
 export interface DocumentScanner extends HybridObject<{
   ios: "swift";
   android: "kotlin";
@@ -25,4 +37,9 @@ export interface DocumentScanner extends HybridObject<{
    * @returns true nếu được cấp quyền, false nếu bị từ chối
    */
   requestCameraPermission(): Promise<boolean>;
+
+  /**
+   * Chụp ảnh giấy tờ từ Camera Native
+   */
+  capturePhoto(options: NativeCaptureOptions): Promise<NativeCapturedDocument>;
 }

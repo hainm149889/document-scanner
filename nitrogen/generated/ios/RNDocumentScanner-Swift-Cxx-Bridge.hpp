@@ -10,6 +10,8 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `HybridDocumentScannerSpec` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
+// Forward declaration of `NativeCapturedDocument` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridDocumentScannerSpec_cxx` to properly resolve imports.
@@ -17,12 +19,14 @@ namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 
 // Include C++ defined types
 #include "HybridDocumentScannerSpec.hpp"
+#include "NativeCapturedDocument.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 /**
@@ -87,6 +91,70 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
     return Func_void_std__exception_ptr_Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::shared_ptr<Promise<NativeCapturedDocument>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<NativeCapturedDocument>>`.
+   */
+  using std__shared_ptr_Promise_NativeCapturedDocument__ = std::shared_ptr<Promise<NativeCapturedDocument>>;
+  inline std::shared_ptr<Promise<NativeCapturedDocument>> create_std__shared_ptr_Promise_NativeCapturedDocument__() noexcept {
+    return Promise<NativeCapturedDocument>::create();
+  }
+  inline PromiseHolder<NativeCapturedDocument> wrap_std__shared_ptr_Promise_NativeCapturedDocument__(std::shared_ptr<Promise<NativeCapturedDocument>> promise) noexcept {
+    return PromiseHolder<NativeCapturedDocument>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const NativeCapturedDocument& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const NativeCapturedDocument&)>`.
+   */
+  using Func_void_NativeCapturedDocument = std::function<void(const NativeCapturedDocument& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const NativeCapturedDocument& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_NativeCapturedDocument_Wrapper final {
+  public:
+    explicit Func_void_NativeCapturedDocument_Wrapper(std::function<void(const NativeCapturedDocument& /* result */)>&& func): _function(std::make_unique<std::function<void(const NativeCapturedDocument& /* result */)>>(std::move(func))) {}
+    inline void call(NativeCapturedDocument result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const NativeCapturedDocument& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_NativeCapturedDocument create_Func_void_NativeCapturedDocument(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_NativeCapturedDocument_Wrapper wrap_Func_void_NativeCapturedDocument(Func_void_NativeCapturedDocument value) noexcept {
+    return Func_void_NativeCapturedDocument_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<bool>
+  /**
+   * Specialized version of `std::optional<bool>`.
+   */
+  using std__optional_bool_ = std::optional<bool>;
+  inline std::optional<bool> create_std__optional_bool_(const bool& value) noexcept {
+    return std::optional<bool>(value);
+  }
+  inline bool has_value_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<double>
+  /**
+   * Specialized version of `std::optional<double>`.
+   */
+  using std__optional_double_ = std::optional<double>;
+  inline std::optional<double> create_std__optional_double_(const double& value) noexcept {
+    return std::optional<double>(value);
+  }
+  inline bool has_value_std__optional_double_(const std::optional<double>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline double get_std__optional_double_(const std::optional<double>& optional) noexcept {
+    return optional.value();
+  }
+  
   // pragma MARK: std::shared_ptr<HybridDocumentScannerSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridDocumentScannerSpec>`.
@@ -115,6 +183,15 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_bool___ create_Result_std__shared_ptr_Promise_bool___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<bool>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<NativeCapturedDocument>>>
+  using Result_std__shared_ptr_Promise_NativeCapturedDocument___ = Result<std::shared_ptr<Promise<NativeCapturedDocument>>>;
+  inline Result_std__shared_ptr_Promise_NativeCapturedDocument___ create_Result_std__shared_ptr_Promise_NativeCapturedDocument___(const std::shared_ptr<Promise<NativeCapturedDocument>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<NativeCapturedDocument>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_NativeCapturedDocument___ create_Result_std__shared_ptr_Promise_NativeCapturedDocument___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<NativeCapturedDocument>>>::withError(error);
   }
 
 } // namespace margelo::nitro::rndocumentscanner::bridge::swift

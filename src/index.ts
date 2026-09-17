@@ -34,6 +34,10 @@ export const DocumentScannerNative: DocumentScanner = new Proxy(
 );
 
 export type { DocumentScanner };
+export type {
+  NativeCapturedDocument,
+  NativeCaptureOptions,
+} from "./native/DocumentScanner.nitro";
 // Public Types Export
 export * from "./types";
 // Camera UI Component Export

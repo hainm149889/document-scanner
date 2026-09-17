@@ -10,13 +10,20 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `HybridDocumentScannerSpec` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
+// Forward declaration of `NativeCaptureOptions` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
+// Forward declaration of `NativeCapturedDocument` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
 
 // Include C++ defined types
 #include "HybridDocumentScannerSpec.hpp"
+#include "NativeCaptureOptions.hpp"
+#include "NativeCapturedDocument.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>
 #include <memory>
+#include <optional>
 #include <string>
 
 // C++ helpers for Swift

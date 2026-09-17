@@ -13,10 +13,15 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `NativeCapturedDocument` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `NativeCaptureOptions` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 
 #include <string>
 #include <NitroModules/Promise.hpp>
+#include "NativeCapturedDocument.hpp"
+#include "NativeCaptureOptions.hpp"
 
 namespace margelo::nitro::rndocumentscanner {
 
@@ -53,6 +58,7 @@ namespace margelo::nitro::rndocumentscanner {
       virtual std::string ping(const std::string& message) = 0;
       virtual std::string getCameraPermissionStatus() = 0;
       virtual std::shared_ptr<Promise<bool>> requestCameraPermission() = 0;
+      virtual std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) = 0;
 
     protected:
       // Hybrid Setup

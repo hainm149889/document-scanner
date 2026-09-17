@@ -7,11 +7,19 @@
 
 #include "JHybridDocumentScannerSpec.hpp"
 
-
+// Forward declaration of `NativeCapturedDocument` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `NativeCaptureOptions` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 
 #include <string>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/JPromise.hpp>
+#include "NativeCapturedDocument.hpp"
+#include "JNativeCapturedDocument.hpp"
+#include "NativeCaptureOptions.hpp"
+#include "JNativeCaptureOptions.hpp"
+#include <optional>
 
 namespace margelo::nitro::rndocumentscanner {
 
@@ -69,6 +77,22 @@ namespace margelo::nitro::rndocumentscanner {
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<jni::JBoolean>(__boxedResult);
         __promise->resolve(static_cast<bool>(__result->value()));
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<NativeCapturedDocument>> JHybridDocumentScannerSpec::capturePhoto(const NativeCaptureOptions& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeCaptureOptions> /* options */)>("capturePhoto");
+    auto __result = method(_javaPart, JNativeCaptureOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<NativeCapturedDocument>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JNativeCapturedDocument>(__boxedResult);
+        __promise->resolve(__result->toCpp());
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

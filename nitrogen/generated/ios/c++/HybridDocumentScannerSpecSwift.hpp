@@ -12,10 +12,16 @@
 // Forward declaration of `HybridDocumentScannerSpec_cxx` to properly resolve imports.
 namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 
-
+// Forward declaration of `NativeCapturedDocument` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `NativeCaptureOptions` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 
 #include <string>
 #include <NitroModules/Promise.hpp>
+#include "NativeCapturedDocument.hpp"
+#include "NativeCaptureOptions.hpp"
+#include <optional>
 
 #include "RNDocumentScanner-Swift-Cxx-Umbrella.hpp"
 
@@ -93,6 +99,14 @@ namespace margelo::nitro::rndocumentscanner {
     }
     inline std::shared_ptr<Promise<bool>> requestCameraPermission() override {
       auto __result = _swiftPart.requestCameraPermission();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) override {
+      auto __result = _swiftPart.capturePhoto(std::forward<decltype(options)>(options));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

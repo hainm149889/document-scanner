@@ -45,6 +45,10 @@ abstract class HybridDocumentScannerSpec: HybridObject() {
   @DoNotStrip
   @Keep
   abstract fun requestCameraPermission(): Promise<Boolean>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun capturePhoto(options: NativeCaptureOptions): Promise<NativeCapturedDocument>
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {

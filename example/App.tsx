@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
   Text,
@@ -8,6 +8,8 @@ import {
   StatusBar,
   PermissionsAndroid,
   Platform,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import {
   DocumentCameraView,
@@ -15,6 +17,7 @@ import {
   DocumentScannerNative,
   RNDocumentScannerVersion,
   DocumentType,
+  NativeCapturedDocument,
 } from 'rn-document-scanner';
 
 function App(): React.JSX.Element {
@@ -22,6 +25,9 @@ function App(): React.JSX.Element {
   const [enableFlash, setEnableFlash] = useState<boolean>(false);
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [documentType, setDocumentType] = useState<DocumentType>('cccd');
+  const [isCapturing, setIsCapturing] = useState<boolean>(false);
+  const [capturedImage, setCapturedImage] =
+    useState<NativeCapturedDocument | null>(null);
 
   useEffect(() => {
     const requestCameraPermission = async () => {
@@ -59,12 +65,24 @@ function App(): React.JSX.Element {
     }
   }, []);
 
-  const toggleFlash = () => {
-    setEnableFlash(prev => !prev);
+  const handleCapture = async () => {
+    if (!DocumentScannerNative || isCapturing) return;
+    try {
+      setIsCapturing(true);
+      const result = await DocumentScannerNative.capturePhoto({
+        enableFlash,
+      });
+      console.log('Chụp ảnh thành công:', result);
+      setCapturedImage(result);
+    } catch (error) {
+      console.error('Lỗi chụp ảnh:', error);
+    } finally {
+      setIsCapturing(false);
+    }
   };
 
-  const toggleDocumentType = () => {
-    setDocumentType(prev => (prev === 'cccd' ? 'passport' : 'cccd'));
+  const handleReset = () => {
+    setCapturedImage(null);
   };
 
   return (
@@ -81,7 +99,15 @@ function App(): React.JSX.Element {
 
       {/* Camera & Overlay Frame Container */}
       <View style={styles.cameraContainer}>
-        {hasPermission ? (
+        {capturedImage ? (
+          <View style={StyleSheet.absoluteFill}>
+            <Image
+              source={{uri: capturedImage.imageUri}}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          </View>
+        ) : hasPermission ? (
           <View style={StyleSheet.absoluteFill}>
             <DocumentCameraView
               style={StyleSheet.absoluteFill}
@@ -100,25 +126,47 @@ function App(): React.JSX.Element {
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity style={styles.button} onPress={toggleDocumentType}>
-          <Text style={styles.buttonText}>
-            Loại: {documentType.toUpperCase()}
-          </Text>
-        </TouchableOpacity>
+        {capturedImage ? (
+          <TouchableOpacity style={styles.captureButton} onPress={handleReset}>
+            <Text style={styles.buttonText}>Chụp lại</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() =>
+                setDocumentType(prev =>
+                  prev === 'cccd' ? 'passport' : 'cccd',
+                )
+              }>
+              <Text style={styles.buttonText}>
+                {documentType.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.button,
-            enableFlash && styles.flashButtonActive,
-            !hasPermission && styles.buttonDisabled,
-          ]}
-          disabled={!hasPermission}
-          onPress={toggleFlash}
-        >
-          <Text style={styles.buttonText}>
-            Flash: {enableFlash ? 'ON' : 'OFF'}
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.captureButton,
+                isCapturing && styles.buttonDisabled,
+              ]}
+              disabled={isCapturing || !hasPermission}
+              onPress={handleCapture}>
+              {isCapturing ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>Chụp Ảnh</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, enableFlash && styles.flashButtonActive]}
+              onPress={() => setEnableFlash(prev => !prev)}>
+              <Text style={styles.buttonText}>
+                Flash: {enableFlash ? 'ON' : 'OFF'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -151,6 +199,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginHorizontal: 16,
     position: 'relative',
+    backgroundColor: '#111',
   },
   permissionDenied: {
     flex: 1,
@@ -162,6 +211,11 @@ const styles = StyleSheet.create({
     color: '#8e8e93',
     fontSize: 14,
   },
+  previewImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   controls: {
     padding: 20,
     flexDirection: 'row',
@@ -170,12 +224,18 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#2c2c2e',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#3a3a3c',
-    minWidth: 120,
+    alignItems: 'center',
+  },
+  captureButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
     alignItems: 'center',
   },
   flashButtonActive: {

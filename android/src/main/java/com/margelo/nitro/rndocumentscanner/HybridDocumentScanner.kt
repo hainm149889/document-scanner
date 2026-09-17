@@ -6,6 +6,7 @@ import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
+import com.rndocumentscanner.camera.DocumentCameraManagerView
 
 @Keep
 class HybridDocumentScanner : HybridDocumentScannerSpec() {
@@ -37,5 +38,35 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
       }
     }
     return Promise.resolved(false)
+  }
+
+  override fun capturePhoto(options: NativeCaptureOptions): Promise<NativeCapturedDocument> {
+    return Promise.async {
+      val cameraView = DocumentCameraManagerView.sharedCurrentView
+        ?: throw Exception("Camera view active instance not found on Android")
+
+      val enableFlash = options.enableFlash ?: false
+
+      kotlin.coroutines.suspendCoroutine { continuation ->
+        cameraView.post {
+          cameraView.capturePhoto(enableFlash) { result ->
+            result.fold(
+              onSuccess = { map ->
+                val doc = NativeCapturedDocument(
+                  imageUri = map["imageUri"] as String,
+                  width = map["width"] as Double,
+                  height = map["height"] as Double,
+                  orientation = map["orientation"] as Double
+                )
+                continuation.resumeWith(Result.success(doc))
+              },
+              onFailure = { error ->
+                continuation.resumeWith(Result.failure(error))
+              }
+            )
+          }
+        }
+      }
+    }
   }
 }
