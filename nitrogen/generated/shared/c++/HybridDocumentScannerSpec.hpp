@@ -16,6 +16,7 @@
 
 
 #include <string>
+#include <NitroModules/Promise.hpp>
 
 namespace margelo::nitro::rndocumentscanner {
 
@@ -50,6 +51,8 @@ namespace margelo::nitro::rndocumentscanner {
       // Methods
       virtual std::string getNativeVersion() = 0;
       virtual std::string ping(const std::string& message) = 0;
+      virtual std::string getCameraPermissionStatus() = 0;
+      virtual std::shared_ptr<Promise<bool>> requestCameraPermission() = 0;
 
     protected:
       // Hybrid Setup

@@ -16,6 +16,8 @@ namespace margelo::nitro::rndocumentscanner {
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridMethod("getNativeVersion", &HybridDocumentScannerSpec::getNativeVersion);
       prototype.registerHybridMethod("ping", &HybridDocumentScannerSpec::ping);
+      prototype.registerHybridMethod("getCameraPermissionStatus", &HybridDocumentScannerSpec::getCameraPermissionStatus);
+      prototype.registerHybridMethod("requestCameraPermission", &HybridDocumentScannerSpec::requestCameraPermission);
     });
   }
 

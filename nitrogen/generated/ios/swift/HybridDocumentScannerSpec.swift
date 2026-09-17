@@ -15,6 +15,8 @@ public protocol HybridDocumentScannerSpec_protocol: HybridObject {
   // Methods
   func getNativeVersion() throws -> String
   func ping(message: String) throws -> String
+  func getCameraPermissionStatus() throws -> String
+  func requestCameraPermission() throws -> Promise<Bool>
 }
 
 public extension HybridDocumentScannerSpec_protocol {

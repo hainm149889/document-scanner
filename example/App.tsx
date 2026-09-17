@@ -1,46 +1,114 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, Text, StyleSheet, View } from 'react-native';
 import {
+  SafeAreaView,
+  Text,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  StatusBar,
+  PermissionsAndroid,
+  Platform,
+} from 'react-native';
+import {
+  DocumentCameraView,
   DocumentScannerNative,
   RNDocumentScannerVersion,
 } from 'rn-document-scanner';
 
 function App(): React.JSX.Element {
   const [nativeVersion, setNativeVersion] = useState<string>('Loading...');
-  const [pingResult, setPingResult] = useState<string>('Loading...');
+  const [enableFlash, setEnableFlash] = useState<boolean>(false);
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   useEffect(() => {
+    // 1. Kiểm tra và Yêu cầu quyền Camera
+    const requestCameraPermission = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+              title: 'Cấp quyền Camera',
+              message:
+                'Ứng dụng cần truy cập Camera để quét tài liệu CCCD/Passport.',
+              buttonPositive: 'Đồng ý',
+              buttonNegative: 'Hủy',
+            },
+          );
+          setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+        } catch (err) {
+          console.warn('Lỗi xin quyền Android:', err);
+          setHasPermission(false);
+        }
+      } else {
+        // Trên iOS: Kiểm tra và yêu cầu quyền Camera qua DocumentScannerNative
+        try {
+          const granted = await DocumentScannerNative.requestCameraPermission();
+          setHasPermission(granted);
+        } catch (err) {
+          console.warn('Lỗi xin quyền iOS:', err);
+          setHasPermission(false);
+        }
+      }
+    };
+
+    requestCameraPermission();
+
+    // 2. Lấy phiên bản Native Engine từ Nitro
     try {
       if (DocumentScannerNative) {
-        // Gọi hàm getNativeVersion từ Native Swift/Kotlin
         const version = DocumentScannerNative.getNativeVersion();
         setNativeVersion(version);
-
-        // Gọi hàm ping từ Native Swift/Kotlin
-        const response = DocumentScannerNative.ping('Hello Nitro Module!');
-        setPingResult(response);
-      } else {
-        setNativeVersion('Error: DocumentScannerNative is null');
       }
     } catch (error) {
-      console.error('Failed to call Nitro Native Module:', error);
-      setNativeVersion(`Error: ${String(error)}`);
+      console.error('Failed to get Native Version:', error);
     }
   }, []);
 
+  const toggleFlash = () => {
+    setEnableFlash(prev => !prev);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>RN Document Scanner</Text>
-        <Text style={styles.text}>
-          Library JS Version: {RNDocumentScannerVersion}
-        </Text>
+      <StatusBar barStyle="light-content" />
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Native Module Status:</Text>
-          <Text style={styles.cardText}>Engine: {nativeVersion}</Text>
-          <Text style={styles.cardText}>Ping: {pingResult}</Text>
-        </View>
+      {/* Header Info */}
+      <View style={styles.header}>
+        <Text style={styles.title}>RN Document Scanner</Text>
+        <Text style={styles.subtitle}>
+          v{RNDocumentScannerVersion} | {nativeVersion}
+        </Text>
+      </View>
+
+      {/* Native Camera Preview View (Chỉ hiển thị khi đã được cấp quyền) */}
+      <View style={styles.cameraContainer}>
+        {hasPermission ? (
+          <DocumentCameraView style={styles.camera} enableFlash={enableFlash} />
+        ) : (
+          <View style={styles.permissionDenied}>
+            <Text style={styles.permissionText}>
+              Chưa có quyền truy cập Camera
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Controls */}
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={[
+            styles.flashButton,
+            enableFlash && styles.flashButtonActive,
+            !hasPermission && styles.buttonDisabled,
+          ]}
+          disabled={!hasPermission}
+          onPress={toggleFlash}
+        >
+          <Text style={styles.buttonText}>
+            Flash: {enableFlash ? 'ON' : 'OFF'}
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -49,46 +117,65 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#000000',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
+  header: {
+    padding: 16,
     alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#1c1c1e',
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000000',
+    color: '#ffffff',
   },
-  text: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 20,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 15,
-    borderRadius: 8,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333333',
-  },
-  cardText: {
-    fontSize: 14,
-    color: '#444444',
+  subtitle: {
+    fontSize: 12,
+    color: '#8e8e93',
     marginTop: 4,
+  },
+  cameraContainer: {
+    flex: 1,
+    marginVertical: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginHorizontal: 16,
+  },
+  camera: {
+    flex: 1,
+  },
+  permissionDenied: {
+    flex: 1,
+    backgroundColor: '#2c2c2e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  permissionText: {
+    color: '#8e8e93',
+    fontSize: 14,
+  },
+  controls: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  flashButton: {
+    backgroundColor: '#2c2c2e',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#3a3a3c',
+  },
+  flashButtonActive: {
+    backgroundColor: '#ffcc00',
+    borderColor: '#ffcc00',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });
 

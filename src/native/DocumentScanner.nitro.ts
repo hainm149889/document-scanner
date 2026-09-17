@@ -13,4 +13,16 @@ export interface DocumentScanner extends HybridObject<{
    * Phương thức test gửi tin nhắn từ JS sang Native và nhận phản hồi
    */
   ping(message: string): string;
+
+  /**
+   * Lấy trạng thái quyền truy cập Camera hiện tại
+   * @returns "granted" | "denied" | "not-determined" | "restricted"
+   */
+  getCameraPermissionStatus(): string;
+
+  /**
+   * Yêu cầu cấp quyền truy cập Camera từ người dùng
+   * @returns true nếu được cấp quyền, false nếu bị từ chối
+   */
+  requestCameraPermission(): Promise<boolean>;
 }

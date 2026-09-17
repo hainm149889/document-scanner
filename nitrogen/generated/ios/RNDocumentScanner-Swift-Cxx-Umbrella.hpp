@@ -13,6 +13,7 @@ namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
 
 // Include C++ defined types
 #include "HybridDocumentScannerSpec.hpp"
+#include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>
 #include <memory>

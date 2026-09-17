@@ -15,6 +15,7 @@ namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 
 
 #include <string>
+#include <NitroModules/Promise.hpp>
 
 #include "RNDocumentScanner-Swift-Cxx-Umbrella.hpp"
 
@@ -76,6 +77,22 @@ namespace margelo::nitro::rndocumentscanner {
     }
     inline std::string ping(const std::string& message) override {
       auto __result = _swiftPart.ping(message);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::string getCameraPermissionStatus() override {
+      auto __result = _swiftPart.getCameraPermissionStatus();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<bool>> requestCameraPermission() override {
+      auto __result = _swiftPart.requestCameraPermission();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

@@ -5,13 +5,15 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
+import com.margelo.nitro.rndocumentscanner.RNDocumentScannerOnLoad
+
 /**
  * Package đăng ký cho Autolinking của React Native trên Android
  */
 class RNDocumentScannerPackage : ReactPackage {
     init {
         try {
-            System.loadLibrary("RNDocumentScanner")
+            RNDocumentScannerOnLoad.initializeNative()
         } catch (e: Throwable) {
             e.printStackTrace()
         }
@@ -22,6 +24,6 @@ class RNDocumentScannerPackage : ReactPackage {
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-        return emptyList()
+        return listOf(DocumentCameraViewManager())
     }
 }

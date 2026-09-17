@@ -36,3 +36,5 @@ export const DocumentScannerNative: DocumentScanner = new Proxy(
 export type { DocumentScanner };
 // Public Types Export
 export * from "./types";
+// Camera UI Component Export
+export * from "./components/DocumentCameraView";
