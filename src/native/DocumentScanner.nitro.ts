@@ -81,4 +81,9 @@ export interface DocumentScanner
    * @returns Tỷ lệ tương đồng từ 0.0 (hoàn toàn khác) đến 1.0 (trùng lặp hoàn toàn)
    */
   compareImages(imageUri1: string, imageUri2: string): Promise<number>;
+
+  /**
+   * Xoá toàn bộ các file ảnh tạm (.jpg) đã tạo trong quá trình chụp để giải phóng dung lượng đĩa.
+   */
+  cleanCache(): Promise<boolean>;
 }

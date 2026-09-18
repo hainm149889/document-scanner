@@ -134,60 +134,63 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
             return
         }
 
-        guard let imageData = photo.fileDataRepresentation(),
-              var image = UIImage(data: imageData) else {
-            currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to process image data"])))
-            currentCompletion = nil
-            return
-        }
-
-        var isCropped = false
-
-        // Xử lý Perspective Correction hoặc Auto-Crop
-        if currentDetectPerspective {
-            let imgW = image.size.width
-            let imgH = image.size.height
-            // Phát hiện / Giả lập góc tứ giác trong vùng khung hình
-            let defaultCorners = [
-                CGPoint(x: imgW * 0.1, y: imgH * 0.2),
-                CGPoint(x: imgW * 0.9, y: imgH * 0.18),
-                CGPoint(x: imgW * 0.88, y: imgH * 0.82),
-                CGPoint(x: imgW * 0.12, y: imgH * 0.8)
-            ]
-            if let perspectiveImage = VisionEdgeDetector.perspectiveCorrect(image: image, corners: defaultCorners) {
-                image = perspectiveImage
-                isCropped = true
+        // Thực hiện toàn bộ luồng xử lý ảnh trong autoreleasepool để giải phóng bộ nhớ RAM ngay lập tức
+        autoreleasepool {
+            guard let imageData = photo.fileDataRepresentation(),
+                  var image = UIImage(data: imageData) else {
+                currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to process image data"])))
+                currentCompletion = nil
+                return
             }
-        } else if currentAutoCrop {
-            let aspectRatio: CGFloat = currentDocumentType == "passport" ? 1.42 : 1.585
-            if let cropped = cropImageToFrame(image: image, targetAspectRatio: aspectRatio) {
-                image = cropped
-                isCropped = true
-            }
-        }
 
-        let fileName = "scan_\(UUID().uuidString).jpg"
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+            var isCropped = false
 
-        if let finalData = image.jpegData(compressionQuality: 0.9) {
-            do {
-                try finalData.write(to: fileURL)
-                let result: [String: Any] = [
-                    "imageUri": fileURL.absoluteString,
-                    "width": Double(image.size.width * image.scale),
-                    "height": Double(image.size.height * image.scale),
-                    "orientation": 0,
-                    "isCropped": isCropped
+            // Xử lý Perspective Correction hoặc Auto-Crop
+            if currentDetectPerspective {
+                let imgW = image.size.width
+                let imgH = image.size.height
+                // Phát hiện / Giả lập góc tứ giác trong vùng khung hình
+                let defaultCorners = [
+                    CGPoint(x: imgW * 0.1, y: imgH * 0.2),
+                    CGPoint(x: imgW * 0.9, y: imgH * 0.18),
+                    CGPoint(x: imgW * 0.88, y: imgH * 0.82),
+                    CGPoint(x: imgW * 0.12, y: imgH * 0.8)
                 ]
-                currentCompletion?(.success(result))
-            } catch {
-                currentCompletion?(.failure(error))
+                if let perspectiveImage = VisionEdgeDetector.perspectiveCorrect(image: image, corners: defaultCorners) {
+                    image = perspectiveImage
+                    isCropped = true
+                }
+            } else if currentAutoCrop {
+                let aspectRatio: CGFloat = currentDocumentType == "passport" ? 1.42 : 1.585
+                if let cropped = cropImageToFrame(image: image, targetAspectRatio: aspectRatio) {
+                    image = cropped
+                    isCropped = true
+                }
             }
-        } else {
-            currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to compress final image"])))
-        }
 
-        currentCompletion = nil
+            let fileName = "scan_\(UUID().uuidString).jpg"
+            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+            if let finalData = image.jpegData(compressionQuality: 0.85) {
+                do {
+                    try finalData.write(to: fileURL)
+                    let result: [String: Any] = [
+                        "imageUri": fileURL.absoluteString,
+                        "width": Double(image.size.width * image.scale),
+                        "height": Double(image.size.height * image.scale),
+                        "orientation": 0,
+                        "isCropped": isCropped
+                    ]
+                    currentCompletion?(.success(result))
+                } catch {
+                    currentCompletion?(.failure(error))
+                }
+            } else {
+                currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to compress final image"])))
+            }
+
+            currentCompletion = nil
+        }
     }
 
     private func cropImageToFrame(image: UIImage, targetAspectRatio: CGFloat) -> UIImage? {
@@ -209,8 +212,26 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         return UIImage(cgImage: croppedCgImage, scale: image.scale, orientation: image.imageOrientation)
     }
 
+    /// Clean temporary scanned image files
+    static func clearCacheFiles() -> Bool {
+        let tmpDirectory = FileManager.default.temporaryDirectory
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: tmpDirectory, includingPropertiesForKeys: nil)
+            for fileURL in fileURLs where fileURL.lastPathComponent.hasPrefix("scan_") || fileURL.lastPathComponent.hasPrefix("raw_") {
+                try FileManager.default.removeItem(at: fileURL)
+            }
+            return true
+        } catch {
+            print("[DocumentCameraView] Clean cache error: \(error)")
+            return false
+        }
+    }
+
     deinit {
         captureSession?.stopRunning()
+        captureSession = nil
+        previewLayer?.removeFromSuperlayer()
+        previewLayer = nil
         if DocumentCameraView.sharedCurrentView === self {
             DocumentCameraView.sharedCurrentView = nil
         }

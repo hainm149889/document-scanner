@@ -35,7 +35,13 @@ object EdgeDetector {
         val matrix = Matrix()
         matrix.setPolyToPoly(srcPoints, 0, dstPoints, 0, 4)
 
-        canvas.drawBitmap(src, matrix, Paint(Paint.ANTI_ALIAS_FLAG))
+        canvas.drawBitmap(src, matrix, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+
+        // Giải phóng nguồn ảnh cũ nếu đã tạo ra bitmap mới thành công
+        if (!src.isRecycled && src != result) {
+            src.recycle()
+        }
+
         return result
     }
 }

@@ -138,6 +138,14 @@ namespace margelo::nitro::rndocumentscanner {
       auto __value = std::move(__result.value());
       return __value;
     }
+    inline std::shared_ptr<Promise<bool>> cleanCache() override {
+      auto __result = _swiftPart.cleanCache();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
 
   private:
     RNDocumentScanner::HybridDocumentScannerSpec_cxx _swiftPart;

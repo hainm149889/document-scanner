@@ -64,6 +64,7 @@ namespace margelo::nitro::rndocumentscanner {
       virtual std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) = 0;
       virtual std::shared_ptr<Promise<ImageValidationResult>> validateDocumentImage(const std::string& imageUri) = 0;
       virtual std::shared_ptr<Promise<double>> compareImages(const std::string& imageUri1, const std::string& imageUri2) = 0;
+      virtual std::shared_ptr<Promise<bool>> cleanCache() = 0;
 
     protected:
       // Hybrid Setup

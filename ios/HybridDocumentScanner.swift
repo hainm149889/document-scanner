@@ -101,4 +101,13 @@ class HybridDocumentScanner: HybridDocumentScannerSpec {
     }
     return promise
   }
+
+  func cleanCache() throws -> Promise<Bool> {
+    let promise = Promise<Bool>()
+    DispatchQueue.global(qos: .utility).async {
+      let success = DocumentCameraView.clearCacheFiles()
+      promise.resolve(withResult: success)
+    }
+    return promise
+  }
 }

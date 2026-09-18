@@ -128,6 +128,20 @@ function App(): React.JSX.Element {
     );
   };
 
+  const handleCleanCache = async () => {
+    if (!DocumentScannerNative) return;
+    try {
+      const success = await DocumentScannerNative.cleanCache();
+      if (success) {
+        Alert.alert('Thành công', 'Đã dọn dẹp các file ảnh tạm trong bộ nhớ đĩa!');
+      } else {
+        Alert.alert('Thông báo', 'Không có file tạm hoặc đã được dọn sạch.');
+      }
+    } catch (error) {
+      console.error('Lỗi dọn cache:', error);
+    }
+  };
+
   const toggleDocumentType = () => {
     resetFlow();
     setDocType((prev) => (prev === 'cccd' ? 'passport' : 'cccd'));
@@ -164,6 +178,16 @@ function App(): React.JSX.Element {
             v{RNDocumentScannerVersion} | {nativeVersion}
           </Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.headerCleanButton}
+          onPress={handleCleanCache}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Dọn dẹp cache"
+        >
+          <Text style={styles.headerCleanButtonText}>🧹</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Multi-step Progress Bar */}
@@ -361,9 +385,14 @@ function App(): React.JSX.Element {
       {/* Bottom Controls */}
       <View style={styles.controls}>
         {step === 'review' ? (
-          <TouchableOpacity style={styles.resetFlowButton} onPress={resetFlow}>
-            <Text style={styles.buttonText}>Quét lại từ đầu</Text>
-          </TouchableOpacity>
+          <View style={styles.reviewBottomRow}>
+            <TouchableOpacity style={styles.resetFlowButton} onPress={resetFlow}>
+              <Text style={styles.buttonText}>Quét lại từ đầu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cleanCacheButton} onPress={handleCleanCache}>
+              <Text style={styles.buttonText}>Dọn Cache</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <>
             <TouchableOpacity style={styles.button} onPress={toggleDocumentType}>
@@ -426,7 +455,17 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flex: 1,
     alignItems: 'center',
-    marginRight: 36,
+  },
+  headerCleanButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#2c2c2e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerCleanButtonText: {
+    fontSize: 16,
   },
   title: {
     fontSize: 18,
@@ -679,10 +718,22 @@ const styles = StyleSheet.create({
   },
   resetFlowButton: {
     backgroundColor: '#2c2c2e',
-    paddingHorizontal: 28,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
     alignItems: 'center',
+  },
+  cleanCacheButton: {
+    backgroundColor: '#3a3a3c',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    alignItems: 'center',
+  },
+  reviewBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
   },
   flashButtonActive: {
     backgroundColor: '#ffcc00',

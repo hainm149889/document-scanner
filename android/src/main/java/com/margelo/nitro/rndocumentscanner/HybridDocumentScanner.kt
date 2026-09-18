@@ -88,4 +88,16 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
       ImageValidator.compare(imageUri1, imageUri2)
     }
   }
+
+  override fun cleanCache(): Promise<Boolean> {
+    return Promise.async {
+      val cameraView = DocumentCameraManagerView.sharedCurrentView
+      val context = cameraView?.context ?: NitroModules.applicationContext
+      if (context != null) {
+        DocumentCameraManagerView.clearCacheFiles(context)
+      } else {
+        false
+      }
+    }
+  }
 }

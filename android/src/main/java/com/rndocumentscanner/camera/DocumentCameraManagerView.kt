@@ -25,12 +25,30 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
     private val previewView: PreviewView = PreviewView(context)
     private var camera: Camera? = null
     private var imageCapture: ImageCapture? = null
+    private var cameraProvider: ProcessCameraProvider? = null
     private var isFlashEnabled: Boolean = false
 
     companion object {
         @JvmStatic
         @Volatile
         var sharedCurrentView: DocumentCameraManagerView? = null
+
+        /**
+         * Dọn dẹp tất cả các file ảnh tạm (.jpg) đã tạo ra trong cacheDir
+         */
+        fun clearCacheFiles(context: Context): Boolean {
+            return try {
+                val cacheDir = context.cacheDir
+                val files = cacheDir.listFiles { file ->
+                    file.name.startsWith("scan_") || file.name.startsWith("raw_")
+                }
+                files?.forEach { it.delete() }
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
     }
 
     init {
@@ -42,7 +60,8 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            val provider: ProcessCameraProvider = cameraProviderFuture.get()
+            this.cameraProvider = provider
 
             val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(previewView.surfaceProvider)
@@ -55,10 +74,10 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
-                cameraProvider.unbindAll()
+                provider.unbindAll()
                 val lifecycleOwner = context as? LifecycleOwner
                 if (lifecycleOwner != null) {
-                    camera = cameraProvider.bindToLifecycle(
+                    camera = provider.bindToLifecycle(
                         lifecycleOwner, cameraSelector, preview, imageCapture
                     )
                     setFlashEnabled(isFlashEnabled)
@@ -96,7 +115,9 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     try {
                         var bitmap = BitmapFactory.decodeFile(rawFile.absolutePath)
-                        bitmap = rotateImageIfRequired(bitmap, rawFile.absolutePath)
+                        if (bitmap != null) {
+                            bitmap = rotateImageIfRequired(bitmap, rawFile.absolutePath)
+                        }
 
                         var isCropped = false
 
@@ -115,22 +136,37 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
                             val aspectRatio = if (documentType == "passport") 1.42f else 1.585f
                             val cropped = cropBitmapToFrame(bitmap, aspectRatio)
                             if (cropped != null) {
+                                if (!bitmap.isRecycled && bitmap != cropped) {
+                                    bitmap.recycle()
+                                }
                                 bitmap = cropped
                                 isCropped = true
                             }
                         }
 
+                        if (bitmap == null) {
+                            callback(Result.failure(Exception("Bitmap decoding/processing failed")))
+                            return
+                        }
+
                         val finalFile = File(context.cacheDir, "scan_${UUID.randomUUID()}.jpg")
                         FileOutputStream(finalFile).use { out ->
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                        }
+
+                        val resultWidth = bitmap.width.toDouble()
+                        val resultHeight = bitmap.height.toDouble()
+
+                        if (!bitmap.isRecycled) {
+                            bitmap.recycle()
                         }
 
                         if (rawFile.exists()) rawFile.delete()
 
                         val result = mapOf(
                             "imageUri" to "file://${finalFile.absolutePath}",
-                            "width" to bitmap.width.toDouble(),
-                            "height" to bitmap.height.toDouble(),
+                            "width" to resultWidth,
+                            "height" to resultHeight,
                             "orientation" to 0.0,
                             "isCropped" to isCropped
                         )
@@ -178,12 +214,16 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
         val matrix = Matrix()
         matrix.postRotate(degree)
         val rotatedImg = Bitmap.createBitmap(img, 0, 0, img.width, img.height, matrix, true)
-        img.recycle()
+        if (!img.isRecycled && img != rotatedImg) {
+            img.recycle()
+        }
         return rotatedImg
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        cameraProvider?.unbindAll()
+        cameraProvider = null
         if (sharedCurrentView == this) {
             sharedCurrentView = null
         }
