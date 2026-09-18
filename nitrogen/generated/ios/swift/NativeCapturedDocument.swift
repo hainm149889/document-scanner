@@ -18,8 +18,8 @@ public extension NativeCapturedDocument {
   /**
    * Create a new instance of `NativeCapturedDocument`.
    */
-  init(imageUri: String, width: Double, height: Double, orientation: Double) {
-    self.init(std.string(imageUri), width, height, orientation)
+  init(imageUri: String, width: Double, height: Double, orientation: Double, isCropped: Bool) {
+    self.init(std.string(imageUri), width, height, orientation, isCropped)
   }
 
   @inline(__always)
@@ -40,5 +40,10 @@ public extension NativeCapturedDocument {
   @inline(__always)
   var orientation: Double {
     return self.__orientation
+  }
+  
+  @inline(__always)
+  var isCropped: Bool {
+    return self.__isCropped
   }
 }

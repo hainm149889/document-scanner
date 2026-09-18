@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions, ColorValue } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ColorValue,
+  TouchableOpacity,
+} from "react-native";
 import type { DocumentType, FrameOptions } from "../types";
 
 export interface ScannerOverlayFrameProps {
@@ -11,6 +18,10 @@ export interface ScannerOverlayFrameProps {
   instructionText?: string;
   /** Màu sắc vùng mờ bên ngoài khung (mặc định: rgba(0, 0, 0, 0.6)) */
   maskColor?: ColorValue;
+  /** Callback khi người dùng bấm nút Close ở góc trên bên trái */
+  onClose?: () => void;
+  /** Hiển thị nút Close (mặc định: true nếu truyền onClose) */
+  showCloseButton?: boolean;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -20,6 +31,8 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
   frameOptions,
   instructionText,
   maskColor = "rgba(0, 0, 0, 0.6)",
+  onClose,
+  showCloseButton,
 }) => {
   // Tính toán Aspect Ratio mặc định dựa theo loại giấy tờ
   const defaultAspectRatio = documentType === "passport" ? 1.42 : 1.585;
@@ -37,15 +50,34 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
   const borderRadius = frameOptions?.borderRadius ?? 12;
   const cornerSize = 24;
 
+  const shouldShowClose = showCloseButton ?? !!onClose;
+
   const defaultInstruction =
     documentType === "passport"
       ? "Đặt trang thông tin Hộ Chiếu vào trong khung"
       : "Đặt mặt trước/mặt sau CCCD vào trong khung";
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+    <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+      {/* Nút Close ở góc trên bên trái */}
+      {shouldShowClose && (
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={onClose}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="Đóng camera"
+        >
+          <Text style={styles.closeButtonText}>✕</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Vùng mờ phía trên */}
-      <View style={[styles.mask, { backgroundColor: maskColor }]}>
+      <View
+        style={[styles.mask, { backgroundColor: maskColor }]}
+        pointerEvents="none"
+      >
         <Text style={styles.instructionText}>
           {instructionText ?? defaultInstruction}
         </Text>
@@ -169,5 +201,23 @@ const styles = StyleSheet.create({
   bottomRight: {
     bottom: 0,
     right: 0,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    zIndex: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    lineHeight: 20,
   },
 });

@@ -5,17 +5,23 @@ export interface NativeCapturedDocument {
   width: number;
   height: number;
   orientation: number;
+  isCropped: boolean;
 }
 
 export interface NativeCaptureOptions {
   enableFlash?: boolean;
   quality?: number;
+  /** Bật tự động cắt ảnh theo khung giấy tờ */
+  autoCrop?: boolean;
+  /** Loại giấy tờ để tính Aspect Ratio cắt ('cccd' | 'passport') */
+  documentType?: string;
 }
 
-export interface DocumentScanner extends HybridObject<{
-  ios: "swift";
-  android: "kotlin";
-}> {
+export interface DocumentScanner
+  extends HybridObject<{
+    ios: "swift";
+    android: "kotlin";
+  }> {
   /**
    * Lấy phiên bản của Native Module để test kết nối JS <-> Native
    */
@@ -39,7 +45,7 @@ export interface DocumentScanner extends HybridObject<{
   requestCameraPermission(): Promise<boolean>;
 
   /**
-   * Chụp ảnh giấy tờ từ Camera Native
+   * Chụp ảnh giấy tờ từ Camera Native (có hỗ trợ Auto-Crop)
    */
   capturePhoto(options: NativeCaptureOptions): Promise<NativeCapturedDocument>;
 }

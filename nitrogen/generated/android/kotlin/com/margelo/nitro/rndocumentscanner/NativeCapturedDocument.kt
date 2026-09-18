@@ -29,7 +29,10 @@ data class NativeCapturedDocument(
   val height: Double,
   @DoNotStrip
   @Keep
-  val orientation: Double
+  val orientation: Double,
+  @DoNotStrip
+  @Keep
+  val isCropped: Boolean
 ) {
   /* primary constructor */
 
@@ -40,6 +43,7 @@ data class NativeCapturedDocument(
       && Objects.deepEquals(this.width, other.width)
       && Objects.deepEquals(this.height, other.height)
       && Objects.deepEquals(this.orientation, other.orientation)
+      && Objects.deepEquals(this.isCropped, other.isCropped)
   }
 
   override fun hashCode(): Int {
@@ -47,7 +51,8 @@ data class NativeCapturedDocument(
       imageUri,
       width,
       height,
-      orientation
+      orientation,
+      isCropped
     ).contentDeepHashCode()
   }
 
@@ -59,8 +64,8 @@ data class NativeCapturedDocument(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(imageUri: String, width: Double, height: Double, orientation: Double): NativeCapturedDocument {
-      return NativeCapturedDocument(imageUri, width, height, orientation)
+    private fun fromCpp(imageUri: String, width: Double, height: Double, orientation: Double, isCropped: Boolean): NativeCapturedDocument {
+      return NativeCapturedDocument(imageUri, width, height, orientation, isCropped)
     }
   }
 }

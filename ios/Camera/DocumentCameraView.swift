@@ -9,6 +9,8 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
     private var photoOutput: AVCapturePhotoOutput?
 
     private var currentCompletion: ((Result<[String: Any], Error>) -> Void)?
+    private var currentAutoCrop: Bool = false
+    private var currentDocumentType: String = "cccd"
 
     // Static reference để HybridObject có thể gọi trực tiếp
     static weak var sharedCurrentView: DocumentCameraView?
@@ -105,13 +107,15 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         }
     }
 
-    func capture(enableFlash: Bool, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+    func capture(enableFlash: Bool, autoCrop: Bool, documentType: String, completion: @escaping (Result<[String: Any], Error>) -> Void) {
         guard let photoOutput = self.photoOutput else {
             completion(.failure(NSError(domain: "DocumentCameraView", code: -1, userInfo: [NSLocalizedDescriptionKey: "Photo output unavailable"])))
             return
         }
 
         self.currentCompletion = completion
+        self.currentAutoCrop = autoCrop
+        self.currentDocumentType = documentType
 
         let settings = AVCapturePhotoSettings()
         if videoDeviceInput?.device.hasFlash == true {
@@ -129,29 +133,64 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         }
 
         guard let imageData = photo.fileDataRepresentation(),
-              let image = UIImage(data: imageData) else {
+              var image = UIImage(data: imageData) else {
             currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to process image data"])))
             currentCompletion = nil
             return
         }
 
-        // Lưu ảnh vào thư mục Temp
+        var isCropped = false
+
+        // Thực hiện Cắt Ảnh (Auto-Crop) nếu được bật
+        if currentAutoCrop {
+            let aspectRatio: CGFloat = currentDocumentType == "passport" ? 1.42 : 1.585
+            if let cropped = cropImageToFrame(image: image, targetAspectRatio: aspectRatio) {
+                image = cropped
+                isCropped = true
+            }
+        }
+
         let fileName = "scan_\(UUID().uuidString).jpg"
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 
-        do {
-            try imageData.write(to: fileURL)
-            let result: [String: Any] = [
-                "imageUri": fileURL.absoluteString,
-                "width": Double(image.size.width * image.scale),
-                "height": Double(image.size.height * image.scale),
-                "orientation": 0
-            ]
-            currentCompletion?(.success(result))
-        } catch {
-            currentCompletion?(.failure(error))
+        if let finalData = image.jpegData(compressionQuality: 0.9) {
+            do {
+                try finalData.write(to: fileURL)
+                let result: [String: Any] = [
+                    "imageUri": fileURL.absoluteString,
+                    "width": Double(image.size.width * image.scale),
+                    "height": Double(image.size.height * image.scale),
+                    "orientation": 0,
+                    "isCropped": isCropped
+                ]
+                currentCompletion?(.success(result))
+            } catch {
+                currentCompletion?(.failure(error))
+            }
+        } else {
+            currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to compress cropped image"])))
         }
+
         currentCompletion = nil
+    }
+
+    private func cropImageToFrame(image: UIImage, targetAspectRatio: CGFloat) -> UIImage? {
+        guard let cgImage = image.cgImage else { return nil }
+
+        let imgWidth = CGFloat(cgImage.width)
+        let imgHeight = CGFloat(cgImage.height)
+
+        // Tính toán kích thước vùng crop dựa theo Aspect Ratio trung tâm (85% chiều rộng)
+        let cropWidth = imgWidth * 0.85
+        let cropHeight = cropWidth / targetAspectRatio
+
+        let originX = (imgWidth - cropWidth) / 2.0
+        let originY = (imgHeight - cropHeight) / 2.0
+
+        let cropRect = CGRect(x: originX, y: originY, width: cropWidth, height: cropHeight)
+
+        guard let croppedCgImage = cgImage.cropping(to: cropRect) else { return nil }
+        return UIImage(cgImage: croppedCgImage, scale: image.scale, orientation: image.imageOrientation)
     }
 
     deinit {

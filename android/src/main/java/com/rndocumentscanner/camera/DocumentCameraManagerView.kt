@@ -1,6 +1,9 @@
 package com.rndocumentscanner.camera
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.widget.FrameLayout
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -10,8 +13,10 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import android.media.ExifInterface
 import androidx.lifecycle.LifecycleOwner
 import java.io.File
+import java.io.FileOutputStream
 import java.util.UUID
 
 class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
@@ -67,27 +72,61 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
         camera?.cameraControl?.enableTorch(enabled)
     }
 
-    fun capturePhoto(enableFlash: Boolean, callback: (Result<Map<String, Any>>) -> Unit) {
+    fun capturePhoto(
+        enableFlash: Boolean,
+        autoCrop: Boolean,
+        documentType: String,
+        callback: (Result<Map<String, Any>>) -> Unit
+    ) {
         val capture = imageCapture ?: run {
             callback(Result.failure(Exception("ImageCapture uninitialized")))
             return
         }
 
-        val photoFile = File(context.cacheDir, "scan_${UUID.randomUUID()}.jpg")
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        val rawFile = File(context.cacheDir, "raw_${UUID.randomUUID()}.jpg")
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(rawFile).build()
 
         capture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val result = mapOf<String, Any>(
-                        "imageUri" to "file://${photoFile.absolutePath}",
-                        "width" to 1920.0,
-                        "height" to 1080.0,
-                        "orientation" to 0.0
-                    )
-                    callback(Result.success(result))
+                    try {
+                        var bitmap = BitmapFactory.decodeFile(rawFile.absolutePath)
+                        
+                        // Xoay ảnh chuẩn theo Exif
+                        bitmap = rotateImageIfRequired(bitmap, rawFile.absolutePath)
+
+                        var isCropped = false
+                        if (autoCrop && bitmap != null) {
+                            val aspectRatio = if (documentType == "passport") 1.42f else 1.585f
+                            val cropped = cropBitmapToFrame(bitmap, aspectRatio)
+                            if (cropped != null) {
+                                bitmap = cropped
+                                isCropped = true
+                            }
+                        }
+
+                        // Save final result
+                        val finalFile = File(context.cacheDir, "scan_${UUID.randomUUID()}.jpg")
+                        FileOutputStream(finalFile).use { out ->
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                        }
+
+                        // Xóa file tạm
+                        if (rawFile.exists()) rawFile.delete()
+
+                        val result = mapOf(
+                            "imageUri" to "file://${finalFile.absolutePath}",
+                            "width" to bitmap.width.toDouble(),
+                            "height" to bitmap.height.toDouble(),
+                            "orientation" to 0.0,
+                            "isCropped" to isCropped
+                        )
+                        callback(Result.success(result))
+                    } catch (e: Exception) {
+                        callback(Result.failure(e))
+                    }
                 }
 
                 override fun onError(exc: ImageCaptureException) {
@@ -95,6 +134,41 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
                 }
             }
         )
+    }
+
+    private fun cropBitmapToFrame(src: Bitmap, targetAspectRatio: Float): Bitmap? {
+        val imgW = src.width
+        val imgH = src.height
+
+        val cropW = (imgW * 0.85f).toInt()
+        val cropH = (cropW / targetAspectRatio).toInt()
+
+        val startX = ((imgW - cropW) / 2).coerceAtLeast(0)
+        val startY = ((imgH - cropH) / 2).coerceAtLeast(0)
+
+        if (startX + cropW > imgW || startY + cropH > imgH) return null
+
+        return Bitmap.createBitmap(src, startX, startY, cropW, cropH)
+    }
+
+    private fun rotateImageIfRequired(img: Bitmap, path: String): Bitmap {
+        val ei = ExifInterface(path)
+        val orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+
+        return when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> rotateImage(img, 90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> rotateImage(img, 180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> rotateImage(img, 270f)
+            else -> img
+        }
+    }
+
+    private fun rotateImage(img: Bitmap, degree: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(degree)
+        val rotatedImg = Bitmap.createBitmap(img, 0, 0, img.width, img.height, matrix, true)
+        img.recycle()
+        return rotatedImg
     }
 
     override fun onDetachedFromWindow() {

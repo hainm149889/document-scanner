@@ -46,17 +46,20 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
         ?: throw Exception("Camera view active instance not found on Android")
 
       val enableFlash = options.enableFlash ?: false
+      val autoCrop = options.autoCrop ?: false
+      val documentType = options.documentType ?: "cccd"
 
       kotlin.coroutines.suspendCoroutine { continuation ->
         cameraView.post {
-          cameraView.capturePhoto(enableFlash) { result ->
+          cameraView.capturePhoto(enableFlash, autoCrop, documentType) { result ->
             result.fold(
               onSuccess = { map ->
                 val doc = NativeCapturedDocument(
                   imageUri = map["imageUri"] as String,
                   width = map["width"] as Double,
                   height = map["height"] as Double,
-                  orientation = map["orientation"] as Double
+                  orientation = map["orientation"] as Double,
+                  isCropped = map["isCropped"] as Boolean
                 )
                 continuation.resumeWith(Result.success(doc))
               },

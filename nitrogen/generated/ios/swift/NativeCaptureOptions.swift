@@ -18,7 +18,7 @@ public extension NativeCaptureOptions {
   /**
    * Create a new instance of `NativeCaptureOptions`.
    */
-  init(enableFlash: Bool?, quality: Double?) {
+  init(enableFlash: Bool?, quality: Double?, autoCrop: Bool?, documentType: String?) {
     self.init({ () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = enableFlash {
         return bridge.create_std__optional_bool_(__unwrappedValue)
@@ -28,6 +28,18 @@ public extension NativeCaptureOptions {
     }(), { () -> bridge.std__optional_double_ in
       if let __unwrappedValue = quality {
         return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = autoCrop {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = documentType {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
         return .init()
       }
@@ -52,6 +64,30 @@ public extension NativeCaptureOptions {
       if bridge.has_value_std__optional_double_(self.__quality) {
         let __unwrapped = bridge.get_std__optional_double_(self.__quality)
         return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var autoCrop: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__autoCrop) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__autoCrop)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var documentType: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__documentType) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__documentType)
+        return String(__unwrapped)
       } else {
         return nil
       }

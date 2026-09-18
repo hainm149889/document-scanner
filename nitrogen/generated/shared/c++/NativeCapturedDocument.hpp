@@ -43,10 +43,11 @@ namespace margelo::nitro::rndocumentscanner {
     double width     SWIFT_PRIVATE;
     double height     SWIFT_PRIVATE;
     double orientation     SWIFT_PRIVATE;
+    bool isCropped     SWIFT_PRIVATE;
 
   public:
     NativeCapturedDocument() = default;
-    explicit NativeCapturedDocument(std::string imageUri, double width, double height, double orientation): imageUri(imageUri), width(width), height(height), orientation(orientation) {}
+    explicit NativeCapturedDocument(std::string imageUri, double width, double height, double orientation, bool isCropped): imageUri(imageUri), width(width), height(height), orientation(orientation), isCropped(isCropped) {}
 
   public:
     friend bool operator==(const NativeCapturedDocument& lhs, const NativeCapturedDocument& rhs) = default;
@@ -65,7 +66,8 @@ namespace margelo::nitro {
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "imageUri"))),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "width"))),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "height"))),
-        JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "orientation")))
+        JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "orientation"))),
+        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isCropped")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::rndocumentscanner::NativeCapturedDocument& arg) {
@@ -74,6 +76,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "width"), JSIConverter<double>::toJSI(runtime, arg.width));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "height"), JSIConverter<double>::toJSI(runtime, arg.height));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "orientation"), JSIConverter<double>::toJSI(runtime, arg.orientation));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "isCropped"), JSIConverter<bool>::toJSI(runtime, arg.isCropped));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -88,6 +91,7 @@ namespace margelo::nitro {
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "width")))) return false;
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "height")))) return false;
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "orientation")))) return false;
+      if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isCropped")))) return false;
       return true;
     }
   };

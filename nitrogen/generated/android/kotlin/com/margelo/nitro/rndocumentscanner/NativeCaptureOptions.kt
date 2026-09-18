@@ -23,7 +23,13 @@ data class NativeCaptureOptions(
   val enableFlash: Boolean?,
   @DoNotStrip
   @Keep
-  val quality: Double?
+  val quality: Double?,
+  @DoNotStrip
+  @Keep
+  val autoCrop: Boolean?,
+  @DoNotStrip
+  @Keep
+  val documentType: String?
 ) {
   /* primary constructor */
 
@@ -32,12 +38,16 @@ data class NativeCaptureOptions(
     if (other !is NativeCaptureOptions) return false
     return Objects.deepEquals(this.enableFlash, other.enableFlash)
       && Objects.deepEquals(this.quality, other.quality)
+      && Objects.deepEquals(this.autoCrop, other.autoCrop)
+      && Objects.deepEquals(this.documentType, other.documentType)
   }
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
       enableFlash,
-      quality
+      quality,
+      autoCrop,
+      documentType
     ).contentDeepHashCode()
   }
 
@@ -49,8 +59,8 @@ data class NativeCaptureOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(enableFlash: Boolean?, quality: Double?): NativeCaptureOptions {
-      return NativeCaptureOptions(enableFlash, quality)
+    private fun fromCpp(enableFlash: Boolean?, quality: Double?, autoCrop: Boolean?, documentType: String?): NativeCaptureOptions {
+      return NativeCaptureOptions(enableFlash, quality, autoCrop, documentType)
     }
   }
 }

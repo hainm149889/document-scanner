@@ -58,14 +58,18 @@ class HybridDocumentScanner: HybridDocumentScannerSpec {
       }
 
       let enableFlash = options.enableFlash ?? false
-      cameraView.capture(enableFlash: enableFlash) { result in
+      let autoCrop = options.autoCrop ?? false
+      let documentType = options.documentType ?? "cccd"
+
+      cameraView.capture(enableFlash: enableFlash, autoCrop: autoCrop, documentType: documentType) { result in
         switch result {
         case .success(let dict):
           let doc = NativeCapturedDocument(
             imageUri: dict["imageUri"] as? String ?? "",
             width: dict["width"] as? Double ?? 0.0,
             height: dict["height"] as? Double ?? 0.0,
-            orientation: dict["orientation"] as? Double ?? 0.0
+            orientation: dict["orientation"] as? Double ?? 0.0,
+            isCropped: dict["isCropped"] as? Bool ?? false
           )
           promise.resolve(withResult: doc)
         case .failure(let error):

@@ -39,11 +39,14 @@ namespace margelo::nitro::rndocumentscanner {
       double height = this->getFieldValue(fieldHeight);
       static const auto fieldOrientation = clazz->getField<double>("orientation");
       double orientation = this->getFieldValue(fieldOrientation);
+      static const auto fieldIsCropped = clazz->getField<jboolean>("isCropped");
+      jboolean isCropped = this->getFieldValue(fieldIsCropped);
       return NativeCapturedDocument(
         imageUri->toStdString(),
         width,
         height,
-        orientation
+        orientation,
+        static_cast<bool>(isCropped)
       );
     }
 
@@ -53,7 +56,7 @@ namespace margelo::nitro::rndocumentscanner {
      */
     [[maybe_unused]]
     static jni::local_ref<JNativeCapturedDocument::javaobject> fromCpp(const NativeCapturedDocument& value) {
-      using JSignature = JNativeCapturedDocument(jni::alias_ref<jni::JString>, double, double, double);
+      using JSignature = JNativeCapturedDocument(jni::alias_ref<jni::JString>, double, double, double, jboolean);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -61,7 +64,8 @@ namespace margelo::nitro::rndocumentscanner {
         jni::make_jstring(value.imageUri),
         value.width,
         value.height,
-        value.orientation
+        value.orientation,
+        value.isCropped
       );
     }
   };
