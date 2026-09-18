@@ -6,7 +6,7 @@
 import { NitroModules } from "react-native-nitro-modules";
 import type { DocumentScanner } from "./native/DocumentScanner.nitro";
 
-export const RNDocumentScannerVersion = "0.1.0";
+export const RNDocumentScannerVersion = "1.0.0";
 
 // Khởi tạo Nitro Module Hybrid Object an toàn với lazy evaluation
 let _instance: DocumentScanner | null = null;

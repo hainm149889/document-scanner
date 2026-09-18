@@ -1,7 +1,7 @@
 {
   "name": "rn-document-scanner",
-  "version": "0.1.0",
-  "description": "High-performance document camera scanner for CCCD and Passport supporting React Native New Architecture and Nitro Modules",
+  "version": "1.0.0",
+  "description": "High-performance Document & ID Card Scanner for React Native powered by Nitro Modules, AVFoundation & CameraX",
   "source": "./src/index.ts",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
@@ -26,6 +26,7 @@
     "android",
     "ios",
     "nitrogen",
+    "nitro.json",
     "rn-document-scanner.podspec",
     "README.md",
     "LICENSE"
@@ -40,10 +41,15 @@
     "ios",
     "android",
     "document-scanner",
-    "cccd",
+    "camera",
+    "id-card",
     "passport",
+    "cccd",
+    "crop",
+    "perspective-correction",
     "nitro-modules",
-    "new-architecture"
+    "new-architecture",
+    "ekyc"
   ],
   "author": "",
   "license": "MIT",
