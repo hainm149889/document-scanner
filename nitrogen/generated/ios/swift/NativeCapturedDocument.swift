@@ -18,8 +18,14 @@ public extension NativeCapturedDocument {
   /**
    * Create a new instance of `NativeCapturedDocument`.
    */
-  init(imageUri: String, width: Double, height: Double, orientation: Double, isCropped: Bool) {
-    self.init(std.string(imageUri), width, height, orientation, isCropped)
+  init(imageUri: String, width: Double, height: Double, orientation: Double, isCropped: Bool, corners: DocumentCorners?) {
+    self.init(std.string(imageUri), width, height, orientation, isCropped, { () -> bridge.std__optional_DocumentCorners_ in
+      if let __unwrappedValue = corners {
+        return bridge.create_std__optional_DocumentCorners_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }())
   }
 
   @inline(__always)
@@ -45,5 +51,10 @@ public extension NativeCapturedDocument {
   @inline(__always)
   var isCropped: Bool {
     return self.__isCropped
+  }
+  
+  @inline(__always)
+  var corners: DocumentCorners? {
+    return self.__corners.value
   }
 }

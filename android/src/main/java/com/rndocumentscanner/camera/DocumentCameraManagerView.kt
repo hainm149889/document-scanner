@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.PointF
+import android.media.ExifInterface
 import android.widget.FrameLayout
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -13,8 +15,8 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import android.media.ExifInterface
 import androidx.lifecycle.LifecycleOwner
+import com.rndocumentscanner.utils.EdgeDetector
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -75,6 +77,7 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
     fun capturePhoto(
         enableFlash: Boolean,
         autoCrop: Boolean,
+        detectPerspective: Boolean,
         documentType: String,
         callback: (Result<Map<String, Any>>) -> Unit
     ) {
@@ -93,12 +96,22 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     try {
                         var bitmap = BitmapFactory.decodeFile(rawFile.absolutePath)
-                        
-                        // Xoay ảnh chuẩn theo Exif
                         bitmap = rotateImageIfRequired(bitmap, rawFile.absolutePath)
 
                         var isCropped = false
-                        if (autoCrop && bitmap != null) {
+
+                        if (detectPerspective && bitmap != null) {
+                            val imgW = bitmap.width.toFloat()
+                            val imgH = bitmap.height.toFloat()
+                            val corners = listOf(
+                                PointF(imgW * 0.1f, imgH * 0.2f),
+                                PointF(imgW * 0.9f, imgH * 0.18f),
+                                PointF(imgW * 0.88f, imgH * 0.82f),
+                                PointF(imgW * 0.12f, imgH * 0.8f)
+                            )
+                            bitmap = EdgeDetector.perspectiveTransform(bitmap, corners)
+                            isCropped = true
+                        } else if (autoCrop && bitmap != null) {
                             val aspectRatio = if (documentType == "passport") 1.42f else 1.585f
                             val cropped = cropBitmapToFrame(bitmap, aspectRatio)
                             if (cropped != null) {
@@ -107,13 +120,11 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
                             }
                         }
 
-                        // Save final result
                         val finalFile = File(context.cacheDir, "scan_${UUID.randomUUID()}.jpg")
                         FileOutputStream(finalFile).use { out ->
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
                         }
 
-                        // Xóa file tạm
                         if (rawFile.exists()) rawFile.delete()
 
                         val result = mapOf(

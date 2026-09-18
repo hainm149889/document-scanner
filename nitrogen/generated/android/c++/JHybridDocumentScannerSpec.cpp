@@ -9,6 +9,12 @@
 
 // Forward declaration of `NativeCapturedDocument` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `DocumentCorners` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
+// Forward declaration of `Point` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct Point; }
+// Forward declaration of `ImageValidationResult` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
 // Forward declaration of `NativeCaptureOptions` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 
@@ -17,9 +23,15 @@ namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 #include <NitroModules/JPromise.hpp>
 #include "NativeCapturedDocument.hpp"
 #include "JNativeCapturedDocument.hpp"
+#include "DocumentCorners.hpp"
+#include <optional>
+#include "JDocumentCorners.hpp"
+#include "Point.hpp"
+#include "JPoint.hpp"
+#include "ImageValidationResult.hpp"
+#include "JImageValidationResult.hpp"
 #include "NativeCaptureOptions.hpp"
 #include "JNativeCaptureOptions.hpp"
-#include <optional>
 
 namespace margelo::nitro::rndocumentscanner {
 
@@ -93,6 +105,38 @@ namespace margelo::nitro::rndocumentscanner {
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<JNativeCapturedDocument>(__boxedResult);
         __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<ImageValidationResult>> JHybridDocumentScannerSpec::validateDocumentImage(const std::string& imageUri) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JString> /* imageUri */)>("validateDocumentImage");
+    auto __result = method(_javaPart, jni::make_jstring(imageUri));
+    return [&]() {
+      auto __promise = Promise<ImageValidationResult>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JImageValidationResult>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<double>> JHybridDocumentScannerSpec::compareImages(const std::string& imageUri1, const std::string& imageUri2) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JString> /* imageUri1 */, jni::alias_ref<jni::JString> /* imageUri2 */)>("compareImages");
+    auto __result = method(_javaPart, jni::make_jstring(imageUri1), jni::make_jstring(imageUri2));
+    return [&]() {
+      auto __promise = Promise<double>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<jni::JDouble>(__boxedResult);
+        __promise->resolve(__result->value());
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

@@ -18,6 +18,8 @@ public protocol HybridDocumentScannerSpec_protocol: HybridObject {
   func getCameraPermissionStatus() throws -> String
   func requestCameraPermission() throws -> Promise<Bool>
   func capturePhoto(options: NativeCaptureOptions) throws -> Promise<NativeCapturedDocument>
+  func validateDocumentImage(imageUri: String) throws -> Promise<ImageValidationResult>
+  func compareImages(imageUri1: String, imageUri2: String) throws -> Promise<Double>
 }
 
 public extension HybridDocumentScannerSpec_protocol {

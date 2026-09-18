@@ -6,6 +6,8 @@ import {
   Dimensions,
   ColorValue,
   TouchableOpacity,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import type { DocumentType, FrameOptions } from "../types";
 
@@ -18,10 +20,12 @@ export interface ScannerOverlayFrameProps {
   instructionText?: string;
   /** Màu sắc vùng mờ bên ngoài khung (mặc định: rgba(0, 0, 0, 0.6)) */
   maskColor?: ColorValue;
-  /** Callback khi người dùng bấm nút Close ở góc trên bên trái */
+  /** Callback khi người dùng bấm nút Close */
   onClose?: () => void;
   /** Hiển thị nút Close (mặc định: true nếu truyền onClose) */
   showCloseButton?: boolean;
+  /** Custom style cho nút Close */
+  closeButtonStyle?: StyleProp<ViewStyle>;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -33,6 +37,7 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
   maskColor = "rgba(0, 0, 0, 0.6)",
   onClose,
   showCloseButton,
+  closeButtonStyle,
 }) => {
   // Tính toán Aspect Ratio mặc định dựa theo loại giấy tờ
   const defaultAspectRatio = documentType === "passport" ? 1.42 : 1.585;
@@ -58,11 +63,95 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
       : "Đặt mặt trước/mặt sau CCCD vào trong khung";
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-      {/* Nút Close ở góc trên bên trái */}
+    <View style={styles.container} pointerEvents="box-none">
+      {/* Vùng mờ bao quanh khung (Cutout Mask) */}
+      <View style={styles.maskContainer} pointerEvents="none">
+        <View style={[styles.topMask, { backgroundColor: maskColor }]}>
+          <Text style={styles.instructionText}>
+            {instructionText ?? defaultInstruction}
+          </Text>
+        </View>
+
+        <View style={[styles.middleRow, { height: frameHeight }]}>
+          <View style={[styles.sideMask, { backgroundColor: maskColor }]} />
+          <View style={{ width: frameWidth, height: frameHeight }} />
+          <View style={[styles.sideMask, { backgroundColor: maskColor }]} />
+        </View>
+
+        <View style={[styles.bottomMask, { backgroundColor: maskColor }]} />
+      </View>
+
+      {/* Khung quét chính căn giữa tuyệt đối */}
+      <View
+        style={[styles.frame, { width: frameWidth, height: frameHeight }]}
+        pointerEvents="none"
+      >
+        {/* Top-Left Corner */}
+        <View
+          style={[
+            styles.corner,
+            styles.topLeft,
+            {
+              borderColor,
+              borderTopWidth: borderWidth,
+              borderLeftWidth: borderWidth,
+              borderTopLeftRadius: borderRadius,
+              width: cornerSize,
+              height: cornerSize,
+            },
+          ]}
+        />
+        {/* Top-Right Corner */}
+        <View
+          style={[
+            styles.corner,
+            styles.topRight,
+            {
+              borderColor,
+              borderTopWidth: borderWidth,
+              borderRightWidth: borderWidth,
+              borderTopRightRadius: borderRadius,
+              width: cornerSize,
+              height: cornerSize,
+            },
+          ]}
+        />
+        {/* Bottom-Left Corner */}
+        <View
+          style={[
+            styles.corner,
+            styles.bottomLeft,
+            {
+              borderColor,
+              borderBottomWidth: borderWidth,
+              borderLeftWidth: borderWidth,
+              borderBottomLeftRadius: borderRadius,
+              width: cornerSize,
+              height: cornerSize,
+            },
+          ]}
+        />
+        {/* Bottom-Right Corner */}
+        <View
+          style={[
+            styles.corner,
+            styles.bottomRight,
+            {
+              borderColor,
+              borderBottomWidth: borderWidth,
+              borderRightWidth: borderWidth,
+              borderBottomRightRadius: borderRadius,
+              width: cornerSize,
+              height: cornerSize,
+            },
+          ]}
+        />
+      </View>
+
+      {/* Nút Close ở góc trên bên trái - nằm an toàn trên vùng mask */}
       {shouldShowClose && (
         <TouchableOpacity
-          style={styles.closeButton}
+          style={[styles.closeButton, closeButtonStyle]}
           onPress={onClose}
           activeOpacity={0.7}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -72,107 +161,39 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
           <Text style={styles.closeButtonText}>✕</Text>
         </TouchableOpacity>
       )}
-
-      {/* Vùng mờ phía trên */}
-      <View
-        style={[styles.mask, { backgroundColor: maskColor }]}
-        pointerEvents="none"
-      >
-        <Text style={styles.instructionText}>
-          {instructionText ?? defaultInstruction}
-        </Text>
-      </View>
-
-      {/* Hàng giữa chứa Khung quét trong suốt */}
-      <View style={styles.middleRow}>
-        <View style={[styles.mask, { backgroundColor: maskColor }]} />
-
-        {/* Khung quét chính */}
-        <View
-          style={[styles.frame, { width: frameWidth, height: frameHeight }]}
-        >
-          {/* Top-Left Corner */}
-          <View
-            style={[
-              styles.corner,
-              styles.topLeft,
-              {
-                borderColor,
-                borderTopWidth: borderWidth,
-                borderLeftWidth: borderWidth,
-                borderTopLeftRadius: borderRadius,
-                width: cornerSize,
-                height: cornerSize,
-              },
-            ]}
-          />
-          {/* Top-Right Corner */}
-          <View
-            style={[
-              styles.corner,
-              styles.topRight,
-              {
-                borderColor,
-                borderTopWidth: borderWidth,
-                borderRightWidth: borderWidth,
-                borderTopRightRadius: borderRadius,
-                width: cornerSize,
-                height: cornerSize,
-              },
-            ]}
-          />
-          {/* Bottom-Left Corner */}
-          <View
-            style={[
-              styles.corner,
-              styles.bottomLeft,
-              {
-                borderColor,
-                borderBottomWidth: borderWidth,
-                borderLeftWidth: borderWidth,
-                borderBottomLeftRadius: borderRadius,
-                width: cornerSize,
-                height: cornerSize,
-              },
-            ]}
-          />
-          {/* Bottom-Right Corner */}
-          <View
-            style={[
-              styles.corner,
-              styles.bottomRight,
-              {
-                borderColor,
-                borderBottomWidth: borderWidth,
-                borderRightWidth: borderWidth,
-                borderBottomRightRadius: borderRadius,
-                width: cornerSize,
-                height: cornerSize,
-              },
-            ]}
-          />
-        </View>
-
-        <View style={[styles.mask, { backgroundColor: maskColor }]} />
-      </View>
-
-      {/* Vùng mờ phía dưới */}
-      <View style={[styles.mask, { backgroundColor: maskColor }]} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  mask: {
-    flex: 1,
+  container: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
   },
+  maskContainer: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "column",
+  },
+  topMask: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
   middleRow: {
     flexDirection: "row",
+    alignItems: "center",
+  },
+  sideMask: {
+    flex: 1,
+    height: "100%",
+  },
+  bottomMask: {
+    flex: 1,
   },
   frame: {
-    position: "relative",
+    position: "absolute",
     backgroundColor: "transparent",
   },
   instructionText: {
@@ -180,8 +201,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
-    paddingHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   corner: {
     position: "absolute",
@@ -204,13 +224,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 16,
-    left: 16,
-    zIndex: 10,
+    top: 14,
+    left: 14,
+    zIndex: 99,
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
     justifyContent: "center",
     alignItems: "center",
   },

@@ -17,11 +17,14 @@
 namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
 // Forward declaration of `NativeCaptureOptions` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
+// Forward declaration of `ImageValidationResult` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
 
 #include <string>
 #include <NitroModules/Promise.hpp>
 #include "NativeCapturedDocument.hpp"
 #include "NativeCaptureOptions.hpp"
+#include "ImageValidationResult.hpp"
 
 namespace margelo::nitro::rndocumentscanner {
 
@@ -59,6 +62,8 @@ namespace margelo::nitro::rndocumentscanner {
       virtual std::string getCameraPermissionStatus() = 0;
       virtual std::shared_ptr<Promise<bool>> requestCameraPermission() = 0;
       virtual std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) = 0;
+      virtual std::shared_ptr<Promise<ImageValidationResult>> validateDocumentImage(const std::string& imageUri) = 0;
+      virtual std::shared_ptr<Promise<double>> compareImages(const std::string& imageUri1, const std::string& imageUri2) = 0;
 
     protected:
       // Hybrid Setup

@@ -59,6 +59,8 @@ namespace margelo::nitro::rndocumentscanner {
     std::string getCameraPermissionStatus() override;
     std::shared_ptr<Promise<bool>> requestCameraPermission() override;
     std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) override;
+    std::shared_ptr<Promise<ImageValidationResult>> validateDocumentImage(const std::string& imageUri) override;
+    std::shared_ptr<Promise<double>> compareImages(const std::string& imageUri1, const std::string& imageUri2) override;
 
   private:
     jni::global_ref<JHybridDocumentScannerSpec::JavaPart> _javaPart;

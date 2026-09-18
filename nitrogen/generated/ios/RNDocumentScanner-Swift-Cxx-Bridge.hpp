@@ -8,18 +8,27 @@
 #pragma once
 
 // Forward declarations of C++ defined types
+// Forward declaration of `DocumentCorners` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
 // Forward declaration of `HybridDocumentScannerSpec` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
+// Forward declaration of `ImageValidationResult` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
 // Forward declaration of `NativeCapturedDocument` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `Point` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct Point; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridDocumentScannerSpec_cxx` to properly resolve imports.
 namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 
 // Include C++ defined types
+#include "DocumentCorners.hpp"
 #include "HybridDocumentScannerSpec.hpp"
+#include "ImageValidationResult.hpp"
 #include "NativeCapturedDocument.hpp"
+#include "Point.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
 #include <NitroModules/Result.hpp>
@@ -89,6 +98,21 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
   Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) noexcept {
     return Func_void_std__exception_ptr_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<DocumentCorners>
+  /**
+   * Specialized version of `std::optional<DocumentCorners>`.
+   */
+  using std__optional_DocumentCorners_ = std::optional<DocumentCorners>;
+  inline std::optional<DocumentCorners> create_std__optional_DocumentCorners_(const DocumentCorners& value) noexcept {
+    return std::optional<DocumentCorners>(value);
+  }
+  inline bool has_value_std__optional_DocumentCorners_(const std::optional<DocumentCorners>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline DocumentCorners get_std__optional_DocumentCorners_(const std::optional<DocumentCorners>& optional) noexcept {
+    return optional.value();
   }
   
   // pragma MARK: std::shared_ptr<Promise<NativeCapturedDocument>>
@@ -170,6 +194,74 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
     return optional.value();
   }
   
+  // pragma MARK: std::shared_ptr<Promise<ImageValidationResult>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<ImageValidationResult>>`.
+   */
+  using std__shared_ptr_Promise_ImageValidationResult__ = std::shared_ptr<Promise<ImageValidationResult>>;
+  inline std::shared_ptr<Promise<ImageValidationResult>> create_std__shared_ptr_Promise_ImageValidationResult__() noexcept {
+    return Promise<ImageValidationResult>::create();
+  }
+  inline PromiseHolder<ImageValidationResult> wrap_std__shared_ptr_Promise_ImageValidationResult__(std::shared_ptr<Promise<ImageValidationResult>> promise) noexcept {
+    return PromiseHolder<ImageValidationResult>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const ImageValidationResult& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const ImageValidationResult&)>`.
+   */
+  using Func_void_ImageValidationResult = std::function<void(const ImageValidationResult& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const ImageValidationResult& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_ImageValidationResult_Wrapper final {
+  public:
+    explicit Func_void_ImageValidationResult_Wrapper(std::function<void(const ImageValidationResult& /* result */)>&& func): _function(std::make_unique<std::function<void(const ImageValidationResult& /* result */)>>(std::move(func))) {}
+    inline void call(ImageValidationResult result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const ImageValidationResult& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_ImageValidationResult create_Func_void_ImageValidationResult(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_ImageValidationResult_Wrapper wrap_Func_void_ImageValidationResult(Func_void_ImageValidationResult value) noexcept {
+    return Func_void_ImageValidationResult_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<double>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<double>>`.
+   */
+  using std__shared_ptr_Promise_double__ = std::shared_ptr<Promise<double>>;
+  inline std::shared_ptr<Promise<double>> create_std__shared_ptr_Promise_double__() noexcept {
+    return Promise<double>::create();
+  }
+  inline PromiseHolder<double> wrap_std__shared_ptr_Promise_double__(std::shared_ptr<Promise<double>> promise) noexcept {
+    return PromiseHolder<double>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(double /* result */)>
+  /**
+   * Specialized version of `std::function<void(double)>`.
+   */
+  using Func_void_double = std::function<void(double /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(double / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_double_Wrapper final {
+  public:
+    explicit Func_void_double_Wrapper(std::function<void(double /* result */)>&& func): _function(std::make_unique<std::function<void(double /* result */)>>(std::move(func))) {}
+    inline void call(double result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(double /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_double create_Func_void_double(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_double_Wrapper wrap_Func_void_double(Func_void_double value) noexcept {
+    return Func_void_double_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<HybridDocumentScannerSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridDocumentScannerSpec>`.
@@ -207,6 +299,24 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_NativeCapturedDocument___ create_Result_std__shared_ptr_Promise_NativeCapturedDocument___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<NativeCapturedDocument>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<ImageValidationResult>>>
+  using Result_std__shared_ptr_Promise_ImageValidationResult___ = Result<std::shared_ptr<Promise<ImageValidationResult>>>;
+  inline Result_std__shared_ptr_Promise_ImageValidationResult___ create_Result_std__shared_ptr_Promise_ImageValidationResult___(const std::shared_ptr<Promise<ImageValidationResult>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<ImageValidationResult>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_ImageValidationResult___ create_Result_std__shared_ptr_Promise_ImageValidationResult___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<ImageValidationResult>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<double>>>
+  using Result_std__shared_ptr_Promise_double___ = Result<std::shared_ptr<Promise<double>>>;
+  inline Result_std__shared_ptr_Promise_double___ create_Result_std__shared_ptr_Promise_double___(const std::shared_ptr<Promise<double>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<double>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_double___ create_Result_std__shared_ptr_Promise_double___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<double>>>::withError(error);
   }
 
 } // namespace margelo::nitro::rndocumentscanner::bridge::swift

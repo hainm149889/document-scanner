@@ -49,6 +49,14 @@ abstract class HybridDocumentScannerSpec: HybridObject() {
   @DoNotStrip
   @Keep
   abstract fun capturePhoto(options: NativeCaptureOptions): Promise<NativeCapturedDocument>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun validateDocumentImage(imageUri: String): Promise<ImageValidationResult>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun compareImages(imageUri1: String, imageUri2: String): Promise<Double>
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {

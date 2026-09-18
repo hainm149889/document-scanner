@@ -38,6 +38,22 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const ImageValidationResult& /* result */)>
+  Func_void_ImageValidationResult create_Func_void_ImageValidationResult(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = RNDocumentScanner::Func_void_ImageValidationResult::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const ImageValidationResult& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(double /* result */)>
+  Func_void_double create_Func_void_double(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = RNDocumentScanner::Func_void_double::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](double result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridDocumentScannerSpec>
   std::shared_ptr<HybridDocumentScannerSpec> create_std__shared_ptr_HybridDocumentScannerSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     RNDocumentScanner::HybridDocumentScannerSpec_cxx swiftPart = RNDocumentScanner::HybridDocumentScannerSpec_cxx::fromUnsafe(swiftUnsafePointer);

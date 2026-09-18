@@ -37,9 +37,14 @@ export type { DocumentScanner };
 export type {
   NativeCapturedDocument,
   NativeCaptureOptions,
+  Point,
+  DocumentCorners,
+  ImageValidationResult,
 } from "./native/DocumentScanner.nitro";
 // Public Types Export
 export * from "./types";
 // Camera UI Component Export
 export * from "./components/DocumentCameraView";
 export * from "./components/ScannerOverlayFrame";
+// Hooks Export
+export * from "./hooks/useDocumentScannerFlow";

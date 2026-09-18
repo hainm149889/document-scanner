@@ -4,11 +4,11 @@ import AVFoundation
 
 class HybridDocumentScanner: HybridDocumentScannerSpec {
   func getNativeVersion() throws -> String {
-    return "0.1.0-ios"
+    return "iOS AVFoundation & Vision Native Engine v1.0.0"
   }
 
   func ping(message: String) throws -> String {
-    return "iOS Pong: \(message)"
+    return "iOS Swift received: '\(message)'"
   }
 
   func getCameraPermissionStatus() throws -> String {
@@ -59,9 +59,10 @@ class HybridDocumentScanner: HybridDocumentScannerSpec {
 
       let enableFlash = options.enableFlash ?? false
       let autoCrop = options.autoCrop ?? false
+      let detectPerspective = options.detectPerspective ?? false
       let documentType = options.documentType ?? "cccd"
 
-      cameraView.capture(enableFlash: enableFlash, autoCrop: autoCrop, documentType: documentType) { result in
+      cameraView.capture(enableFlash: enableFlash, autoCrop: autoCrop, detectPerspective: detectPerspective, documentType: documentType) { result in
         switch result {
         case .success(let dict):
           let doc = NativeCapturedDocument(
@@ -69,7 +70,8 @@ class HybridDocumentScanner: HybridDocumentScannerSpec {
             width: dict["width"] as? Double ?? 0.0,
             height: dict["height"] as? Double ?? 0.0,
             orientation: dict["orientation"] as? Double ?? 0.0,
-            isCropped: dict["isCropped"] as? Bool ?? false
+            isCropped: dict["isCropped"] as? Bool ?? false,
+            corners: nil
           )
           promise.resolve(withResult: doc)
         case .failure(let error):
@@ -78,6 +80,25 @@ class HybridDocumentScanner: HybridDocumentScannerSpec {
       }
     }
 
+    return promise
+  }
+
+  func validateDocumentImage(imageUri: String) throws -> Promise<ImageValidationResult> {
+    let promise = Promise<ImageValidationResult>()
+    DispatchQueue.global(qos: .userInitiated).async {
+      let res = ImageValidator.validate(imageUri: imageUri)
+      let result = ImageValidationResult(hasFace: res.hasFace, imageHash: res.hash)
+      promise.resolve(withResult: result)
+    }
+    return promise
+  }
+
+  func compareImages(imageUri1: String, imageUri2: String) throws -> Promise<Double> {
+    let promise = Promise<Double>()
+    DispatchQueue.global(qos: .userInitiated).async {
+      let sim = ImageValidator.compare(imageUri1: imageUri1, imageUri2: imageUri2)
+      promise.resolve(withResult: sim)
+    }
     return promise
   }
 }

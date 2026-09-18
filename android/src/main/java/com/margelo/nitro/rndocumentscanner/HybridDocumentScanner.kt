@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
 import com.rndocumentscanner.camera.DocumentCameraManagerView
+import com.rndocumentscanner.utils.ImageValidator
 
 @Keep
 class HybridDocumentScanner : HybridDocumentScannerSpec() {
@@ -47,11 +48,12 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
 
       val enableFlash = options.enableFlash ?: false
       val autoCrop = options.autoCrop ?: false
+      val detectPerspective = options.detectPerspective ?: false
       val documentType = options.documentType ?: "cccd"
 
       kotlin.coroutines.suspendCoroutine { continuation ->
         cameraView.post {
-          cameraView.capturePhoto(enableFlash, autoCrop, documentType) { result ->
+          cameraView.capturePhoto(enableFlash, autoCrop, detectPerspective, documentType) { result ->
             result.fold(
               onSuccess = { map ->
                 val doc = NativeCapturedDocument(
@@ -59,7 +61,8 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
                   width = map["width"] as Double,
                   height = map["height"] as Double,
                   orientation = map["orientation"] as Double,
-                  isCropped = map["isCropped"] as Boolean
+                  isCropped = map["isCropped"] as Boolean,
+                  corners = null
                 )
                 continuation.resumeWith(Result.success(doc))
               },
@@ -70,6 +73,19 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
           }
         }
       }
+    }
+  }
+
+  override fun validateDocumentImage(imageUri: String): Promise<ImageValidationResult> {
+    return Promise.async {
+      val res = ImageValidator.validate(imageUri)
+      ImageValidationResult(res.hasFace, res.hash)
+    }
+  }
+
+  override fun compareImages(imageUri1: String, imageUri2: String): Promise<Double> {
+    return Promise.async {
+      ImageValidator.compare(imageUri1, imageUri2)
     }
   }
 }

@@ -18,7 +18,7 @@ public extension NativeCaptureOptions {
   /**
    * Create a new instance of `NativeCaptureOptions`.
    */
-  init(enableFlash: Bool?, quality: Double?, autoCrop: Bool?, documentType: String?) {
+  init(enableFlash: Bool?, quality: Double?, autoCrop: Bool?, detectPerspective: Bool?, documentType: String?) {
     self.init({ () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = enableFlash {
         return bridge.create_std__optional_bool_(__unwrappedValue)
@@ -33,6 +33,12 @@ public extension NativeCaptureOptions {
       }
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = autoCrop {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = detectPerspective {
         return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
@@ -75,6 +81,18 @@ public extension NativeCaptureOptions {
     return { () -> Bool? in
       if bridge.has_value_std__optional_bool_(self.__autoCrop) {
         let __unwrapped = bridge.get_std__optional_bool_(self.__autoCrop)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var detectPerspective: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__detectPerspective) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__detectPerspective)
         return __unwrapped
       } else {
         return nil

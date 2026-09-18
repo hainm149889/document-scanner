@@ -38,12 +38,15 @@ namespace margelo::nitro::rndocumentscanner {
       jni::local_ref<jni::JDouble> quality = this->getFieldValue(fieldQuality);
       static const auto fieldAutoCrop = clazz->getField<jni::JBoolean>("autoCrop");
       jni::local_ref<jni::JBoolean> autoCrop = this->getFieldValue(fieldAutoCrop);
+      static const auto fieldDetectPerspective = clazz->getField<jni::JBoolean>("detectPerspective");
+      jni::local_ref<jni::JBoolean> detectPerspective = this->getFieldValue(fieldDetectPerspective);
       static const auto fieldDocumentType = clazz->getField<jni::JString>("documentType");
       jni::local_ref<jni::JString> documentType = this->getFieldValue(fieldDocumentType);
       return NativeCaptureOptions(
         enableFlash != nullptr ? std::make_optional(static_cast<bool>(enableFlash->value())) : std::nullopt,
         quality != nullptr ? std::make_optional(quality->value()) : std::nullopt,
         autoCrop != nullptr ? std::make_optional(static_cast<bool>(autoCrop->value())) : std::nullopt,
+        detectPerspective != nullptr ? std::make_optional(static_cast<bool>(detectPerspective->value())) : std::nullopt,
         documentType != nullptr ? std::make_optional(documentType->toStdString()) : std::nullopt
       );
     }
@@ -54,7 +57,7 @@ namespace margelo::nitro::rndocumentscanner {
      */
     [[maybe_unused]]
     static jni::local_ref<JNativeCaptureOptions::javaobject> fromCpp(const NativeCaptureOptions& value) {
-      using JSignature = JNativeCaptureOptions(jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>);
+      using JSignature = JNativeCaptureOptions(jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -62,6 +65,7 @@ namespace margelo::nitro::rndocumentscanner {
         value.enableFlash.has_value() ? jni::JBoolean::valueOf(value.enableFlash.value()) : nullptr,
         value.quality.has_value() ? jni::JDouble::valueOf(value.quality.value()) : nullptr,
         value.autoCrop.has_value() ? jni::JBoolean::valueOf(value.autoCrop.value()) : nullptr,
+        value.detectPerspective.has_value() ? jni::JBoolean::valueOf(value.detectPerspective.value()) : nullptr,
         value.documentType.has_value() ? jni::make_jstring(value.documentType.value()) : nullptr
       );
     }

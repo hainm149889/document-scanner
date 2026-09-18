@@ -29,6 +29,9 @@ data class NativeCaptureOptions(
   val autoCrop: Boolean?,
   @DoNotStrip
   @Keep
+  val detectPerspective: Boolean?,
+  @DoNotStrip
+  @Keep
   val documentType: String?
 ) {
   /* primary constructor */
@@ -39,6 +42,7 @@ data class NativeCaptureOptions(
     return Objects.deepEquals(this.enableFlash, other.enableFlash)
       && Objects.deepEquals(this.quality, other.quality)
       && Objects.deepEquals(this.autoCrop, other.autoCrop)
+      && Objects.deepEquals(this.detectPerspective, other.detectPerspective)
       && Objects.deepEquals(this.documentType, other.documentType)
   }
 
@@ -47,6 +51,7 @@ data class NativeCaptureOptions(
       enableFlash,
       quality,
       autoCrop,
+      detectPerspective,
       documentType
     ).contentDeepHashCode()
   }
@@ -59,8 +64,8 @@ data class NativeCaptureOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(enableFlash: Boolean?, quality: Double?, autoCrop: Boolean?, documentType: String?): NativeCaptureOptions {
-      return NativeCaptureOptions(enableFlash, quality, autoCrop, documentType)
+    private fun fromCpp(enableFlash: Boolean?, quality: Double?, autoCrop: Boolean?, detectPerspective: Boolean?, documentType: String?): NativeCaptureOptions {
+      return NativeCaptureOptions(enableFlash, quality, autoCrop, detectPerspective, documentType)
     }
   }
 }

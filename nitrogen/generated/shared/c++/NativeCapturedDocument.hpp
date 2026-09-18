@@ -28,9 +28,12 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `DocumentCorners` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
 
 #include <string>
+#include "DocumentCorners.hpp"
+#include <optional>
 
 namespace margelo::nitro::rndocumentscanner {
 
@@ -44,10 +47,11 @@ namespace margelo::nitro::rndocumentscanner {
     double height     SWIFT_PRIVATE;
     double orientation     SWIFT_PRIVATE;
     bool isCropped     SWIFT_PRIVATE;
+    std::optional<DocumentCorners> corners     SWIFT_PRIVATE;
 
   public:
     NativeCapturedDocument() = default;
-    explicit NativeCapturedDocument(std::string imageUri, double width, double height, double orientation, bool isCropped): imageUri(imageUri), width(width), height(height), orientation(orientation), isCropped(isCropped) {}
+    explicit NativeCapturedDocument(std::string imageUri, double width, double height, double orientation, bool isCropped, std::optional<DocumentCorners> corners): imageUri(imageUri), width(width), height(height), orientation(orientation), isCropped(isCropped), corners(corners) {}
 
   public:
     friend bool operator==(const NativeCapturedDocument& lhs, const NativeCapturedDocument& rhs) = default;
@@ -67,7 +71,8 @@ namespace margelo::nitro {
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "width"))),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "height"))),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "orientation"))),
-        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isCropped")))
+        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isCropped"))),
+        JSIConverter<std::optional<margelo::nitro::rndocumentscanner::DocumentCorners>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "corners")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::rndocumentscanner::NativeCapturedDocument& arg) {
@@ -77,6 +82,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "height"), JSIConverter<double>::toJSI(runtime, arg.height));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "orientation"), JSIConverter<double>::toJSI(runtime, arg.orientation));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "isCropped"), JSIConverter<bool>::toJSI(runtime, arg.isCropped));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "corners"), JSIConverter<std::optional<margelo::nitro::rndocumentscanner::DocumentCorners>>::toJSI(runtime, arg.corners));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -92,6 +98,7 @@ namespace margelo::nitro {
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "height")))) return false;
       if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "orientation")))) return false;
       if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isCropped")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::rndocumentscanner::DocumentCorners>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "corners")))) return false;
       return true;
     }
   };

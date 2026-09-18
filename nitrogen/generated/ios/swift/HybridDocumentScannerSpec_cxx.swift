@@ -197,4 +197,42 @@ open class HybridDocumentScannerSpec_cxx {
       return bridge.create_Result_std__shared_ptr_Promise_NativeCapturedDocument___(__exceptionPtr)
     }
   }
+  
+  @inline(__always)
+  public final func validateDocumentImage(imageUri: std.string) -> bridge.Result_std__shared_ptr_Promise_ImageValidationResult___ {
+    do {
+      let __result = try self.__implementation.validateDocumentImage(imageUri: String(imageUri))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_ImageValidationResult__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_ImageValidationResult__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_ImageValidationResult__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_ImageValidationResult___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_ImageValidationResult___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func compareImages(imageUri1: std.string, imageUri2: std.string) -> bridge.Result_std__shared_ptr_Promise_double___ {
+    do {
+      let __result = try self.__implementation.compareImages(imageUri1: String(imageUri1), imageUri2: String(imageUri2))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_double__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_double__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_double__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_double___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_double___(__exceptionPtr)
+    }
+  }
 }

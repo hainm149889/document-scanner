@@ -10,6 +10,11 @@
 #include <fbjni/fbjni.h>
 #include "NativeCapturedDocument.hpp"
 
+#include "DocumentCorners.hpp"
+#include "JDocumentCorners.hpp"
+#include "JPoint.hpp"
+#include "Point.hpp"
+#include <optional>
 #include <string>
 
 namespace margelo::nitro::rndocumentscanner {
@@ -41,12 +46,15 @@ namespace margelo::nitro::rndocumentscanner {
       double orientation = this->getFieldValue(fieldOrientation);
       static const auto fieldIsCropped = clazz->getField<jboolean>("isCropped");
       jboolean isCropped = this->getFieldValue(fieldIsCropped);
+      static const auto fieldCorners = clazz->getField<JDocumentCorners>("corners");
+      jni::local_ref<JDocumentCorners> corners = this->getFieldValue(fieldCorners);
       return NativeCapturedDocument(
         imageUri->toStdString(),
         width,
         height,
         orientation,
-        static_cast<bool>(isCropped)
+        static_cast<bool>(isCropped),
+        corners != nullptr ? std::make_optional(corners->toCpp()) : std::nullopt
       );
     }
 
@@ -56,7 +64,7 @@ namespace margelo::nitro::rndocumentscanner {
      */
     [[maybe_unused]]
     static jni::local_ref<JNativeCapturedDocument::javaobject> fromCpp(const NativeCapturedDocument& value) {
-      using JSignature = JNativeCapturedDocument(jni::alias_ref<jni::JString>, double, double, double, jboolean);
+      using JSignature = JNativeCapturedDocument(jni::alias_ref<jni::JString>, double, double, double, jboolean, jni::alias_ref<JDocumentCorners>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -65,7 +73,8 @@ namespace margelo::nitro::rndocumentscanner {
         value.width,
         value.height,
         value.orientation,
-        value.isCropped
+        value.isCropped,
+        value.corners.has_value() ? JDocumentCorners::fromCpp(value.corners.value()) : nullptr
       );
     }
   };

@@ -8,17 +8,26 @@
 #pragma once
 
 // Forward declarations of C++ defined types
+// Forward declaration of `DocumentCorners` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
 // Forward declaration of `HybridDocumentScannerSpec` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
+// Forward declaration of `ImageValidationResult` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
 // Forward declaration of `NativeCaptureOptions` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 // Forward declaration of `NativeCapturedDocument` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `Point` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct Point; }
 
 // Include C++ defined types
+#include "DocumentCorners.hpp"
 #include "HybridDocumentScannerSpec.hpp"
+#include "ImageValidationResult.hpp"
 #include "NativeCaptureOptions.hpp"
 #include "NativeCapturedDocument.hpp"
+#include "Point.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>

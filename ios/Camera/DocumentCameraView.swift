@@ -10,6 +10,7 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
 
     private var currentCompletion: ((Result<[String: Any], Error>) -> Void)?
     private var currentAutoCrop: Bool = false
+    private var currentDetectPerspective: Bool = false
     private var currentDocumentType: String = "cccd"
 
     // Static reference để HybridObject có thể gọi trực tiếp
@@ -107,7 +108,7 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         }
     }
 
-    func capture(enableFlash: Bool, autoCrop: Bool, documentType: String, completion: @escaping (Result<[String: Any], Error>) -> Void) {
+    func capture(enableFlash: Bool, autoCrop: Bool, detectPerspective: Bool, documentType: String, completion: @escaping (Result<[String: Any], Error>) -> Void) {
         guard let photoOutput = self.photoOutput else {
             completion(.failure(NSError(domain: "DocumentCameraView", code: -1, userInfo: [NSLocalizedDescriptionKey: "Photo output unavailable"])))
             return
@@ -115,6 +116,7 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
 
         self.currentCompletion = completion
         self.currentAutoCrop = autoCrop
+        self.currentDetectPerspective = detectPerspective
         self.currentDocumentType = documentType
 
         let settings = AVCapturePhotoSettings()
@@ -141,8 +143,22 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
 
         var isCropped = false
 
-        // Thực hiện Cắt Ảnh (Auto-Crop) nếu được bật
-        if currentAutoCrop {
+        // Xử lý Perspective Correction hoặc Auto-Crop
+        if currentDetectPerspective {
+            let imgW = image.size.width
+            let imgH = image.size.height
+            // Phát hiện / Giả lập góc tứ giác trong vùng khung hình
+            let defaultCorners = [
+                CGPoint(x: imgW * 0.1, y: imgH * 0.2),
+                CGPoint(x: imgW * 0.9, y: imgH * 0.18),
+                CGPoint(x: imgW * 0.88, y: imgH * 0.82),
+                CGPoint(x: imgW * 0.12, y: imgH * 0.8)
+            ]
+            if let perspectiveImage = VisionEdgeDetector.perspectiveCorrect(image: image, corners: defaultCorners) {
+                image = perspectiveImage
+                isCropped = true
+            }
+        } else if currentAutoCrop {
             let aspectRatio: CGFloat = currentDocumentType == "passport" ? 1.42 : 1.585
             if let cropped = cropImageToFrame(image: image, targetAspectRatio: aspectRatio) {
                 image = cropped
@@ -168,7 +184,7 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
                 currentCompletion?(.failure(error))
             }
         } else {
-            currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to compress cropped image"])))
+            currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to compress final image"])))
         }
 
         currentCompletion = nil

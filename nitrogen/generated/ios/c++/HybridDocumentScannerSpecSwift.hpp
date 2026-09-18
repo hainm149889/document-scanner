@@ -14,14 +14,23 @@ namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 
 // Forward declaration of `NativeCapturedDocument` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCapturedDocument; }
+// Forward declaration of `DocumentCorners` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
+// Forward declaration of `Point` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct Point; }
 // Forward declaration of `NativeCaptureOptions` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
+// Forward declaration of `ImageValidationResult` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
 
 #include <string>
 #include <NitroModules/Promise.hpp>
 #include "NativeCapturedDocument.hpp"
-#include "NativeCaptureOptions.hpp"
+#include "DocumentCorners.hpp"
 #include <optional>
+#include "Point.hpp"
+#include "NativeCaptureOptions.hpp"
+#include "ImageValidationResult.hpp"
 
 #include "RNDocumentScanner-Swift-Cxx-Umbrella.hpp"
 
@@ -107,6 +116,22 @@ namespace margelo::nitro::rndocumentscanner {
     }
     inline std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) override {
       auto __result = _swiftPart.capturePhoto(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<ImageValidationResult>> validateDocumentImage(const std::string& imageUri) override {
+      auto __result = _swiftPart.validateDocumentImage(imageUri);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<double>> compareImages(const std::string& imageUri1, const std::string& imageUri2) override {
+      auto __result = _swiftPart.compareImages(imageUri1, imageUri2);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

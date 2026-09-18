@@ -43,11 +43,12 @@ namespace margelo::nitro::rndocumentscanner {
     std::optional<bool> enableFlash     SWIFT_PRIVATE;
     std::optional<double> quality     SWIFT_PRIVATE;
     std::optional<bool> autoCrop     SWIFT_PRIVATE;
+    std::optional<bool> detectPerspective     SWIFT_PRIVATE;
     std::optional<std::string> documentType     SWIFT_PRIVATE;
 
   public:
     NativeCaptureOptions() = default;
-    explicit NativeCaptureOptions(std::optional<bool> enableFlash, std::optional<double> quality, std::optional<bool> autoCrop, std::optional<std::string> documentType): enableFlash(enableFlash), quality(quality), autoCrop(autoCrop), documentType(documentType) {}
+    explicit NativeCaptureOptions(std::optional<bool> enableFlash, std::optional<double> quality, std::optional<bool> autoCrop, std::optional<bool> detectPerspective, std::optional<std::string> documentType): enableFlash(enableFlash), quality(quality), autoCrop(autoCrop), detectPerspective(detectPerspective), documentType(documentType) {}
 
   public:
     friend bool operator==(const NativeCaptureOptions& lhs, const NativeCaptureOptions& rhs) = default;
@@ -66,6 +67,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "enableFlash"))),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "quality"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "autoCrop"))),
+        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "detectPerspective"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "documentType")))
       );
     }
@@ -74,6 +76,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "enableFlash"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.enableFlash));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "quality"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.quality));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "autoCrop"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.autoCrop));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "detectPerspective"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.detectPerspective));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "documentType"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.documentType));
       return obj;
     }
@@ -88,6 +91,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "enableFlash")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "quality")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "autoCrop")))) return false;
+      if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "detectPerspective")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "documentType")))) return false;
       return true;
     }
