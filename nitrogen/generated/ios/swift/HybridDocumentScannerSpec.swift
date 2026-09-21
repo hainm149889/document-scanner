@@ -20,6 +20,7 @@ public protocol HybridDocumentScannerSpec_protocol: HybridObject {
   func capturePhoto(options: NativeCaptureOptions) throws -> Promise<NativeCapturedDocument>
   func validateDocumentImage(imageUri: String) throws -> Promise<ImageValidationResult>
   func compareImages(imageUri1: String, imageUri2: String) throws -> Promise<Double>
+  func extractDocumentData(imageUri: String, documentType: String) throws -> Promise<ExtractedDocumentData>
   func cleanCache() throws -> Promise<Bool>
 }
 

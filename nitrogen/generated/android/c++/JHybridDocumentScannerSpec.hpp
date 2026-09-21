@@ -61,6 +61,7 @@ namespace margelo::nitro::rndocumentscanner {
     std::shared_ptr<Promise<NativeCapturedDocument>> capturePhoto(const NativeCaptureOptions& options) override;
     std::shared_ptr<Promise<ImageValidationResult>> validateDocumentImage(const std::string& imageUri) override;
     std::shared_ptr<Promise<double>> compareImages(const std::string& imageUri1, const std::string& imageUri2) override;
+    std::shared_ptr<Promise<ExtractedDocumentData>> extractDocumentData(const std::string& imageUri, const std::string& documentType) override;
     std::shared_ptr<Promise<bool>> cleanCache() override;
 
   private:

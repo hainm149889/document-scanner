@@ -10,6 +10,8 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `DocumentCorners` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
+// Forward declaration of `ExtractedDocumentData` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ExtractedDocumentData; }
 // Forward declaration of `HybridDocumentScannerSpec` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
 // Forward declaration of `ImageValidationResult` to properly resolve imports.
@@ -25,6 +27,7 @@ namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 
 // Include C++ defined types
 #include "DocumentCorners.hpp"
+#include "ExtractedDocumentData.hpp"
 #include "HybridDocumentScannerSpec.hpp"
 #include "ImageValidationResult.hpp"
 #include "NativeCapturedDocument.hpp"
@@ -37,6 +40,7 @@ namespace RNDocumentScanner { class HybridDocumentScannerSpec_cxx; }
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 /**
  * Contains specialized versions of C++ templated types so they can be accessed from Swift,
@@ -262,6 +266,51 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
     return Func_void_double_Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::vector<std::string>
+  /**
+   * Specialized version of `std::vector<std::string>`.
+   */
+  using std__vector_std__string_ = std::vector<std::string>;
+  inline std::vector<std::string> create_std__vector_std__string_(size_t size) noexcept {
+    std::vector<std::string> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<ExtractedDocumentData>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<ExtractedDocumentData>>`.
+   */
+  using std__shared_ptr_Promise_ExtractedDocumentData__ = std::shared_ptr<Promise<ExtractedDocumentData>>;
+  inline std::shared_ptr<Promise<ExtractedDocumentData>> create_std__shared_ptr_Promise_ExtractedDocumentData__() noexcept {
+    return Promise<ExtractedDocumentData>::create();
+  }
+  inline PromiseHolder<ExtractedDocumentData> wrap_std__shared_ptr_Promise_ExtractedDocumentData__(std::shared_ptr<Promise<ExtractedDocumentData>> promise) noexcept {
+    return PromiseHolder<ExtractedDocumentData>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const ExtractedDocumentData& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const ExtractedDocumentData&)>`.
+   */
+  using Func_void_ExtractedDocumentData = std::function<void(const ExtractedDocumentData& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const ExtractedDocumentData& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_ExtractedDocumentData_Wrapper final {
+  public:
+    explicit Func_void_ExtractedDocumentData_Wrapper(std::function<void(const ExtractedDocumentData& /* result */)>&& func): _function(std::make_unique<std::function<void(const ExtractedDocumentData& /* result */)>>(std::move(func))) {}
+    inline void call(ExtractedDocumentData result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const ExtractedDocumentData& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_ExtractedDocumentData create_Func_void_ExtractedDocumentData(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_ExtractedDocumentData_Wrapper wrap_Func_void_ExtractedDocumentData(Func_void_ExtractedDocumentData value) noexcept {
+    return Func_void_ExtractedDocumentData_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<HybridDocumentScannerSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridDocumentScannerSpec>`.
@@ -317,6 +366,15 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_double___ create_Result_std__shared_ptr_Promise_double___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<double>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<ExtractedDocumentData>>>
+  using Result_std__shared_ptr_Promise_ExtractedDocumentData___ = Result<std::shared_ptr<Promise<ExtractedDocumentData>>>;
+  inline Result_std__shared_ptr_Promise_ExtractedDocumentData___ create_Result_std__shared_ptr_Promise_ExtractedDocumentData___(const std::shared_ptr<Promise<ExtractedDocumentData>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<ExtractedDocumentData>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_ExtractedDocumentData___ create_Result_std__shared_ptr_Promise_ExtractedDocumentData___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<ExtractedDocumentData>>>::withError(error);
   }
 
 } // namespace margelo::nitro::rndocumentscanner::bridge::swift

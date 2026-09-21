@@ -37,6 +37,9 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
     override func layoutSubviews() {
         super.layoutSubviews()
         previewLayer?.frame = bounds
+        if let connection = previewLayer?.connection, connection.isVideoOrientationSupported {
+            connection.videoOrientation = .portrait
+        }
     }
 
     private func checkPermissionAndSetup() {
@@ -85,6 +88,9 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
 
         let preview = AVCaptureVideoPreviewLayer(session: session)
         preview.videoGravity = .resizeAspectFill
+        if let connection = preview.connection, connection.isVideoOrientationSupported {
+            connection.videoOrientation = .portrait
+        }
         layer.addSublayer(preview)
         preview.frame = bounds
         self.previewLayer = preview
@@ -114,6 +120,11 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
             return
         }
 
+        // Cố định hướng videoOrientation là portrait cho camera sau khi chụp
+        if let connection = photoOutput.connection(with: .video), connection.isVideoOrientationSupported {
+            connection.videoOrientation = .portrait
+        }
+
         self.currentCompletion = completion
         self.currentAutoCrop = autoCrop
         self.currentDetectPerspective = detectPerspective
@@ -137,11 +148,14 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         // Thực hiện toàn bộ luồng xử lý ảnh trong autoreleasepool để giải phóng bộ nhớ RAM ngay lập tức
         autoreleasepool {
             guard let imageData = photo.fileDataRepresentation(),
-                  var image = UIImage(data: imageData) else {
+                  let rawImage = UIImage(data: imageData) else {
                 currentCompletion?(.failure(NSError(domain: "DocumentCameraView", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to process image data"])))
                 currentCompletion = nil
                 return
             }
+
+            // Chuẩn hóa pixel buffer về hướng .up thực sự để không bị xoay ngang / lộn ngược khi xử lý và lưu JPEG
+            var image = rawImage.normalizedOrientation()
 
             var isCropped = false
 
@@ -209,7 +223,7 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         let cropRect = CGRect(x: originX, y: originY, width: cropWidth, height: cropHeight)
 
         guard let croppedCgImage = cgImage.cropping(to: cropRect) else { return nil }
-        return UIImage(cgImage: croppedCgImage, scale: image.scale, orientation: image.imageOrientation)
+        return UIImage(cgImage: croppedCgImage, scale: image.scale, orientation: .up)
     }
 
     /// Clean temporary scanned image files

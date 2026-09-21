@@ -39,6 +39,20 @@ export interface ImageValidationResult {
   imageHash: string;
 }
 
+export interface ExtractedDocumentData {
+  idNumber: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: string;
+  nationality: string;
+  placeOfOrigin: string;
+  placeOfResidence: string;
+  expiryDate: string;
+  issueDate: string;
+  mrzLines: string[];
+  rawText: string[];
+}
+
 export interface DocumentScanner
   extends HybridObject<{
     ios: "swift";
@@ -81,6 +95,11 @@ export interface DocumentScanner
    * @returns Tỷ lệ tương đồng từ 0.0 (hoàn toàn khác) đến 1.0 (trùng lặp hoàn toàn)
    */
   compareImages(imageUri1: string, imageUri2: string): Promise<number>;
+
+  /**
+   * Trích xuất dữ liệu chữ từ ảnh chụp giấy tờ bằng On-Device OCR Offline (ML Kit / Vision)
+   */
+  extractDocumentData(imageUri: string, documentType: string): Promise<ExtractedDocumentData>;
 
   /**
    * Xoá toàn bộ các file ảnh tạm (.jpg) đã tạo trong quá trình chụp để giải phóng dung lượng đĩa.

@@ -21,6 +21,7 @@ namespace margelo::nitro::rndocumentscanner {
       prototype.registerHybridMethod("capturePhoto", &HybridDocumentScannerSpec::capturePhoto);
       prototype.registerHybridMethod("validateDocumentImage", &HybridDocumentScannerSpec::validateDocumentImage);
       prototype.registerHybridMethod("compareImages", &HybridDocumentScannerSpec::compareImages);
+      prototype.registerHybridMethod("extractDocumentData", &HybridDocumentScannerSpec::extractDocumentData);
       prototype.registerHybridMethod("cleanCache", &HybridDocumentScannerSpec::cleanCache);
     });
   }

@@ -22,6 +22,8 @@ namespace margelo::nitro::rndocumentscanner { struct Point; }
 namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 // Forward declaration of `ImageValidationResult` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
+// Forward declaration of `ExtractedDocumentData` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ExtractedDocumentData; }
 
 #include <string>
 #include <NitroModules/Promise.hpp>
@@ -31,6 +33,8 @@ namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
 #include "Point.hpp"
 #include "NativeCaptureOptions.hpp"
 #include "ImageValidationResult.hpp"
+#include "ExtractedDocumentData.hpp"
+#include <vector>
 
 #include "RNDocumentScanner-Swift-Cxx-Umbrella.hpp"
 
@@ -132,6 +136,14 @@ namespace margelo::nitro::rndocumentscanner {
     }
     inline std::shared_ptr<Promise<double>> compareImages(const std::string& imageUri1, const std::string& imageUri2) override {
       auto __result = _swiftPart.compareImages(imageUri1, imageUri2);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<ExtractedDocumentData>> extractDocumentData(const std::string& imageUri, const std::string& documentType) override {
+      auto __result = _swiftPart.extractDocumentData(imageUri, documentType);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

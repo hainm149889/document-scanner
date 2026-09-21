@@ -102,6 +102,15 @@ class HybridDocumentScanner: HybridDocumentScannerSpec {
     return promise
   }
 
+  func extractDocumentData(imageUri: String, documentType: String) throws -> Promise<ExtractedDocumentData> {
+    let promise = Promise<ExtractedDocumentData>()
+    DispatchQueue.global(qos: .userInitiated).async {
+      let data = DocumentOcrAnalyzer.extractData(imageUri: imageUri, documentType: documentType)
+      promise.resolve(withResult: data)
+    }
+    return promise
+  }
+
   func cleanCache() throws -> Promise<Bool> {
     let promise = Promise<Bool>()
     DispatchQueue.global(qos: .utility).async {

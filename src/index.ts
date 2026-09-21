@@ -40,6 +40,7 @@ export type {
   Point,
   DocumentCorners,
   ImageValidationResult,
+  ExtractedDocumentData,
 } from "./native/DocumentScanner.nitro";
 // Public Types Export
 export * from "./types";

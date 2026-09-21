@@ -60,6 +60,10 @@ abstract class HybridDocumentScannerSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun extractDocumentData(imageUri: String, documentType: String): Promise<ExtractedDocumentData>
+  
+  @DoNotStrip
+  @Keep
   abstract fun cleanCache(): Promise<Boolean>
 
   // Default implementation of `HybridObject.toString()`

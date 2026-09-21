@@ -89,6 +89,12 @@ class HybridDocumentScanner : HybridDocumentScannerSpec() {
     }
   }
 
+  override fun extractDocumentData(imageUri: String, documentType: String): Promise<ExtractedDocumentData> {
+    return Promise.async {
+      com.rndocumentscanner.utils.DocumentOcrAnalyzer.extractData(imageUri, documentType)
+    }
+  }
+
   override fun cleanCache(): Promise<Boolean> {
     return Promise.async {
       val cameraView = DocumentCameraManagerView.sharedCurrentView

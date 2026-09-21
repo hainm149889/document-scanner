@@ -54,6 +54,14 @@ namespace margelo::nitro::rndocumentscanner::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const ExtractedDocumentData& /* result */)>
+  Func_void_ExtractedDocumentData create_Func_void_ExtractedDocumentData(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = RNDocumentScanner::Func_void_ExtractedDocumentData::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const ExtractedDocumentData& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridDocumentScannerSpec>
   std::shared_ptr<HybridDocumentScannerSpec> create_std__shared_ptr_HybridDocumentScannerSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     RNDocumentScanner::HybridDocumentScannerSpec_cxx swiftPart = RNDocumentScanner::HybridDocumentScannerSpec_cxx::fromUnsafe(swiftUnsafePointer);

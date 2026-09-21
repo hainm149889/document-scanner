@@ -10,6 +10,8 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `DocumentCorners` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
+// Forward declaration of `ExtractedDocumentData` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ExtractedDocumentData; }
 // Forward declaration of `HybridDocumentScannerSpec` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { class HybridDocumentScannerSpec; }
 // Forward declaration of `ImageValidationResult` to properly resolve imports.
@@ -23,6 +25,7 @@ namespace margelo::nitro::rndocumentscanner { struct Point; }
 
 // Include C++ defined types
 #include "DocumentCorners.hpp"
+#include "ExtractedDocumentData.hpp"
 #include "HybridDocumentScannerSpec.hpp"
 #include "ImageValidationResult.hpp"
 #include "NativeCaptureOptions.hpp"
@@ -34,6 +37,7 @@ namespace margelo::nitro::rndocumentscanner { struct Point; }
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 // C++ helpers for Swift
 #include "RNDocumentScanner-Swift-Cxx-Bridge.hpp"

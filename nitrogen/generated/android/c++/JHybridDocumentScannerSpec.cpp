@@ -15,6 +15,8 @@ namespace margelo::nitro::rndocumentscanner { struct DocumentCorners; }
 namespace margelo::nitro::rndocumentscanner { struct Point; }
 // Forward declaration of `ImageValidationResult` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct ImageValidationResult; }
+// Forward declaration of `ExtractedDocumentData` to properly resolve imports.
+namespace margelo::nitro::rndocumentscanner { struct ExtractedDocumentData; }
 // Forward declaration of `NativeCaptureOptions` to properly resolve imports.
 namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 
@@ -30,6 +32,9 @@ namespace margelo::nitro::rndocumentscanner { struct NativeCaptureOptions; }
 #include "JPoint.hpp"
 #include "ImageValidationResult.hpp"
 #include "JImageValidationResult.hpp"
+#include "ExtractedDocumentData.hpp"
+#include "JExtractedDocumentData.hpp"
+#include <vector>
 #include "NativeCaptureOptions.hpp"
 #include "JNativeCaptureOptions.hpp"
 
@@ -137,6 +142,22 @@ namespace margelo::nitro::rndocumentscanner {
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<jni::JDouble>(__boxedResult);
         __promise->resolve(__result->value());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<ExtractedDocumentData>> JHybridDocumentScannerSpec::extractDocumentData(const std::string& imageUri, const std::string& documentType) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JString> /* imageUri */, jni::alias_ref<jni::JString> /* documentType */)>("extractDocumentData");
+    auto __result = method(_javaPart, jni::make_jstring(imageUri), jni::make_jstring(documentType));
+    return [&]() {
+      auto __promise = Promise<ExtractedDocumentData>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JExtractedDocumentData>(__boxedResult);
+        __promise->resolve(__result->toCpp());
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

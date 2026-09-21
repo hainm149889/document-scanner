@@ -1,6 +1,7 @@
 package com.rndocumentscanner.camera
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
@@ -16,6 +17,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.facebook.react.bridge.ReactContext
 import com.rndocumentscanner.utils.EdgeDetector
 import java.io.File
 import java.io.FileOutputStream
@@ -52,45 +54,139 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
     }
 
     init {
+        previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
         addView(previewView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         sharedCurrentView = this
-        startCamera()
+        post {
+            startCamera()
+        }
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        val w = right - left
+        val h = bottom - top
+        previewView.measure(
+            MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+        )
+        previewView.layout(0, 0, w, h)
+    }
+
+    override fun requestLayout() {
+        super.requestLayout()
+        post(measureAndLayout)
+    }
+
+    private val measureAndLayout = Runnable {
+        measure(
+            MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        )
+        layout(left, top, right, bottom)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        sharedCurrentView = this
+        post {
+            if (camera == null) {
+                startCamera()
+            }
+        }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if (hasWindowFocus && camera == null && hasCameraPermission()) {
+            startCamera()
+        }
+    }
+
+    private fun hasCameraPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.CAMERA
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun getLifecycleOwner(): LifecycleOwner? {
+        var ctx: Context? = context
+        while (ctx != null) {
+            if (ctx is LifecycleOwner) {
+                return ctx
+            }
+            if (ctx is ContextWrapper) {
+                ctx = ctx.baseContext
+            } else {
+                break
+            }
+        }
+        val reactContext = context as? ReactContext
+        val activity = reactContext?.currentActivity
+        if (activity is LifecycleOwner) {
+            return activity
+        }
+        return null
     }
 
     private fun startCamera() {
+        if (!hasCameraPermission()) {
+            android.util.Log.w("DocumentCameraView", "Chưa có quyền CAMERA, bỏ qua khởi tạo CameraX.")
+            return
+        }
+
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener({
-            val provider: ProcessCameraProvider = cameraProviderFuture.get()
-            this.cameraProvider = provider
-
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-
-            imageCapture = ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .build()
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
             try {
+                val provider: ProcessCameraProvider = cameraProviderFuture.get()
+                this.cameraProvider = provider
+
+                val rotation = previewView.display?.rotation ?: android.view.Surface.ROTATION_0
+                val preview = Preview.Builder()
+                    .setTargetRotation(rotation)
+                    .build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+
+                imageCapture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .setTargetRotation(rotation)
+                    .build()
+
+                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
                 provider.unbindAll()
-                val lifecycleOwner = context as? LifecycleOwner
+                val lifecycleOwner = getLifecycleOwner()
                 if (lifecycleOwner != null) {
                     camera = provider.bindToLifecycle(
                         lifecycleOwner, cameraSelector, preview, imageCapture
                     )
-                    setFlashEnabled(isFlashEnabled)
+                    // Áp dụng lại trạng thái Flash Torch nếu đã được bật trước đó
+                    if (isFlashEnabled) {
+                        setFlashEnabled(true)
+                    }
+                    android.util.Log.i("DocumentCameraView", "CameraX bound thành công vào LifecycleOwner: $lifecycleOwner")
+                } else {
+                    android.util.Log.e("DocumentCameraView", "LifecycleOwner is null for Context: $context")
                 }
             } catch (exc: Exception) {
-                exc.printStackTrace()
+                android.util.Log.e("DocumentCameraView", "Lỗi khởi tạo CameraX", exc)
             }
         }, ContextCompat.getMainExecutor(context))
     }
 
     fun setFlashEnabled(enabled: Boolean) {
         this.isFlashEnabled = enabled
-        camera?.cameraControl?.enableTorch(enabled)
+        try {
+            val cam = camera ?: return
+            if (cam.cameraInfo.hasFlashUnit()) {
+                cam.cameraControl.enableTorch(enabled)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("DocumentCameraView", "Không thể bật/tắt flash torch: ${e.message}")
+        }
     }
 
     fun capturePhoto(
@@ -104,6 +200,20 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
             callback(Result.failure(Exception("ImageCapture uninitialized")))
             return
         }
+
+        if (camera == null) {
+            callback(Result.failure(Exception("Camera chưa được kích hoạt hoặc quyền Camera bị từ chối.")))
+            return
+        }
+
+        if (enableFlash) {
+            capture.flashMode = ImageCapture.FLASH_MODE_ON
+        } else {
+            capture.flashMode = ImageCapture.FLASH_MODE_OFF
+        }
+
+        val currentRotation = previewView.display?.rotation ?: android.view.Surface.ROTATION_0
+        capture.targetRotation = currentRotation
 
         val rawFile = File(context.cacheDir, "raw_${UUID.randomUUID()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(rawFile).build()
@@ -202,17 +312,24 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
         val ei = ExifInterface(path)
         val orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
 
-        return when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> rotateImage(img, 90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> rotateImage(img, 180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> rotateImage(img, 270f)
-            else -> img
-        }
-    }
-
-    private fun rotateImage(img: Bitmap, degree: Float): Bitmap {
         val matrix = Matrix()
-        matrix.postRotate(degree)
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+            ExifInterface.ORIENTATION_TRANSPOSE -> {
+                matrix.postRotate(90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_TRANSVERSE -> {
+                matrix.postRotate(270f)
+                matrix.postScale(-1f, 1f)
+            }
+            else -> return img
+        }
+
         val rotatedImg = Bitmap.createBitmap(img, 0, 0, img.width, img.height, matrix, true)
         if (!img.isRecycled && img != rotatedImg) {
             img.recycle()
