@@ -77,10 +77,41 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
             return
         }
 
+        // Cấu hình tối ưu độ sắc nét cho cảm biến camera
+        do {
+            try videoDevice.lockForConfiguration()
+            if videoDevice.isFocusModeSupported(.continuousAutoFocus) {
+                videoDevice.focusMode = .continuousAutoFocus
+            }
+            if videoDevice.isExposureModeSupported(.continuousAutoExposure) {
+                videoDevice.exposureMode = .continuousAutoExposure
+            }
+            if videoDevice.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) {
+                videoDevice.whiteBalanceMode = .continuousAutoWhiteBalance
+            }
+            // Ưu tiên cự ly gần để đọc văn bản rõ nét
+            if videoDevice.isAutoFocusRangeRestrictionSupported {
+                videoDevice.autoFocusRangeRestriction = .near
+            }
+            if videoDevice.isLowLightBoostSupported {
+                videoDevice.automaticallyEnablesLowLightBoostWhenAvailable = true
+            }
+            videoDevice.isSubjectAreaChangeMonitoringEnabled = true
+            videoDevice.unlockForConfiguration()
+        } catch {
+            print("[DocumentCameraView] Error configuring device settings: \(error)")
+        }
+
         session.addInput(videoInput)
         self.videoDeviceInput = videoInput
 
         let output = AVCapturePhotoOutput()
+        // Kích hoạt chụp ảnh độ phân giải tối đa của cảm biến phần cứng
+        output.isHighResolutionCaptureEnabled = true
+        if #available(iOS 13.0, *) {
+            output.maxPhotoQualityPrioritization = .quality
+        }
+
         if session.canAddOutput(output) {
             session.addOutput(output)
             self.photoOutput = output
@@ -98,8 +129,39 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         session.commitConfiguration()
         self.captureSession = session
 
+        // Thêm tính năng Tap-to-Focus trực tiếp trên khung preview
+        setupTapToFocus()
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             self?.captureSession?.startRunning()
+        }
+    }
+
+    private func setupTapToFocus() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTapToFocus(_:)))
+        self.addGestureRecognizer(tapGesture)
+        self.isUserInteractionEnabled = true
+    }
+
+    @objc private func handleTapToFocus(_ gesture: UITapGestureRecognizer) {
+        guard let preview = previewLayer, let device = videoDeviceInput?.device else { return }
+        let touchPoint = gesture.location(in: self)
+        let convertedPoint = preview.captureDevicePointConverted(fromLayerPoint: touchPoint)
+
+        do {
+            try device.lockForConfiguration()
+            if device.isFocusPointOfInterestSupported && device.isFocusModeSupported(.autoFocus) {
+                device.focusPointOfInterest = convertedPoint
+                device.focusMode = .autoFocus
+            }
+            if device.isExposurePointOfInterestSupported && device.isExposureModeSupported(.autoExpose) {
+                device.exposurePointOfInterest = convertedPoint
+                device.exposureMode = .autoExpose
+            }
+            device.isSubjectAreaChangeMonitoringEnabled = true
+            device.unlockForConfiguration()
+        } catch {
+            print("[DocumentCameraView] Tap-to-focus error: \(error)")
         }
     }
 
@@ -130,12 +192,62 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
         self.currentDetectPerspective = detectPerspective
         self.currentDocumentType = documentType
 
-        let settings = AVCapturePhotoSettings()
+        let settings: AVCapturePhotoSettings
+        if photoOutput.availablePhotoCodecTypes.contains(.jpeg) {
+            settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
+        } else {
+            settings = AVCapturePhotoSettings()
+        }
+
+        // Bật High Resolution và ưu tiên chất lượng ảnh cao nhất (Deep Fusion / Smart HDR)
+        settings.isHighResolutionPhotoEnabled = true
+        if #available(iOS 13.0, *) {
+            settings.photoQualityPrioritization = .quality
+        }
+
         if videoDeviceInput?.device.hasFlash == true {
             settings.flashMode = enableFlash ? .on : .off
         }
 
-        photoOutput.capturePhoto(with: settings, delegate: self)
+        // Đảm bảo autofocus và exposure ổn định trước khi kích hoạt capture
+        executeCaptureWithStabilityCheck(photoOutput: photoOutput, settings: settings)
+    }
+
+    /// Kiểm tra trạng thái lens focus/exposure trước khi chụp để tránh ảnh bị soft/out-of-focus
+    private func executeCaptureWithStabilityCheck(photoOutput: AVCapturePhotoOutput, settings: AVCapturePhotoSettings) {
+        guard let device = videoDeviceInput?.device else {
+            photoOutput.capturePhoto(with: settings, delegate: self)
+            return
+        }
+
+        // Nếu camera đang ổn định (không hunting focus), chụp ngay lập tức
+        if !device.isAdjustingFocus && !device.isAdjustingExposure {
+            photoOutput.capturePhoto(with: settings, delegate: self)
+            return
+        }
+
+        // Nếu camera đang điều chỉnh focus, chờ tối đa 500ms để focus hoàn tất
+        let startTime = CACurrentMediaTime()
+        let maxWaitDuration: Double = 0.5
+
+        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+        timer.schedule(deadline: .now() + 0.05, repeating: 0.05)
+        timer.setEventHandler { [weak self, weak device, weak photoOutput] in
+            guard let self = self, let dev = device, let output = photoOutput else {
+                timer.cancel()
+                return
+            }
+
+            let elapsed = CACurrentMediaTime() - startTime
+            let isStable = !dev.isAdjustingFocus
+            let isTimeout = elapsed >= maxWaitDuration
+
+            if isStable || isTimeout {
+                timer.cancel()
+                output.capturePhoto(with: settings, delegate: self)
+            }
+        }
+        timer.resume()
     }
 
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
@@ -185,7 +297,7 @@ class DocumentCameraView: UIView, AVCapturePhotoCaptureDelegate {
             let fileName = "scan_\(UUID().uuidString).jpg"
             let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 
-            if let finalData = image.jpegData(compressionQuality: 0.85) {
+            if let finalData = image.jpegData(compressionQuality: 0.95) {
                 do {
                     try finalData.write(to: fileURL)
                     let result: [String: Any] = [

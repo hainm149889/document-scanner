@@ -6,27 +6,31 @@ class ImageValidator {
 
     /// Kiểm tra ảnh: phát hiện khuôn mặt và sinh mã băm dHash (64-bit hex)
     static func validate(imageUri: String) -> (hasFace: Bool, hash: String) {
-        guard let image = loadImage(from: imageUri), let cgImage = image.cgImage else {
-            return (false, "")
+        return autoreleasepool {
+            guard let image = loadImage(from: imageUri), let cgImage = image.cgImage else {
+                return (false, "")
+            }
+
+            let hasFace = detectFace(cgImage: cgImage)
+            let hash = computeDHash(image: image)
+
+            return (hasFace, hash)
         }
-
-        let hasFace = detectFace(cgImage: cgImage)
-        let hash = computeDHash(image: image)
-
-        return (hasFace, hash)
     }
 
     /// So sánh độ tương đồng giữa 2 ảnh (0.0 đến 1.0) dựa trên khoảng cách Hamming của dHash
     static func compare(imageUri1: String, imageUri2: String) -> Double {
-        guard let img1 = loadImage(from: imageUri1),
-              let img2 = loadImage(from: imageUri2) else {
-            return 0.0
+        return autoreleasepool {
+            guard let img1 = loadImage(from: imageUri1),
+                  let img2 = loadImage(from: imageUri2) else {
+                return 0.0
+            }
+
+            let hash1 = computeDHash(image: img1)
+            let hash2 = computeDHash(image: img2)
+
+            return similarity(hash1: hash1, hash2: hash2)
         }
-
-        let hash1 = computeDHash(image: img1)
-        let hash2 = computeDHash(image: img2)
-
-        return similarity(hash1: hash1, hash2: hash2)
     }
 
     // MARK: - Private Helpers

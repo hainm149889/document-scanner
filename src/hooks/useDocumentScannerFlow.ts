@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { DocumentScannerNative } from "../index";
 import type { NativeCaptureOptions, ImageValidationResult } from "../native/DocumentScanner.nitro";
 import type { CapturedDocument, DocumentType } from "../types/scanner";
@@ -95,7 +95,7 @@ export function useDocumentScannerFlow(
     setErrorMessage(null);
   }, []);
 
-  const getStepTitles = useCallback((): { title: string; desc: string } => {
+  const { title: stepTitle, desc: stepDescription } = useMemo(() => {
     if (documentType === "passport") {
       if (step === "front") {
         return {
@@ -127,8 +127,6 @@ export function useDocumentScannerFlow(
       desc: "Kiểm tra hình ảnh 2 mặt CCCD và nhấn Phân tích thông tin.",
     };
   }, [documentType, step]);
-
-  const { title: stepTitle, desc: stepDescription } = getStepTitles();
 
   const captureCurrentStep = useCallback(
     async (captureOptions?: Partial<NativeCaptureOptions>): Promise<CapturedDocument | null> => {

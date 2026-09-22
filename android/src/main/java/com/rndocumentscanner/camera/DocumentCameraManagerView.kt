@@ -8,8 +8,12 @@ import android.graphics.Matrix
 import android.graphics.PointF
 import android.media.ExifInterface
 import android.widget.FrameLayout
+import android.os.Handler
+import android.os.Looper
+import android.view.MotionEvent
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
@@ -22,6 +26,7 @@ import com.rndocumentscanner.utils.EdgeDetector
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
     private val previewView: PreviewView = PreviewView(context)
@@ -58,8 +63,31 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
         previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
         addView(previewView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         sharedCurrentView = this
+        setupTapToFocus()
         post {
             startCamera()
+        }
+    }
+
+    private fun setupTapToFocus() {
+        previewView.setOnTouchListener { view, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                val cam = camera
+                if (cam != null) {
+                    try {
+                        val factory = previewView.meteringPointFactory
+                        val point = factory.createPoint(event.x, event.y)
+                        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+                            .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                            .build()
+                        cam.cameraControl.startFocusAndMetering(action)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                view.performClick()
+            }
+            true
         }
     }
 
@@ -151,7 +179,8 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
                     }
 
                 imageCapture = ImageCapture.Builder()
-                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                    .setJpegQuality(95)
                     .setTargetRotation(rotation)
                     .build()
 
@@ -201,7 +230,7 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
             return
         }
 
-        if (camera == null) {
+        val cam = camera ?: run {
             callback(Result.failure(Exception("Camera chưa được kích hoạt hoặc quyền Camera bị từ chối.")))
             return
         }
@@ -215,6 +244,50 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
         val currentRotation = previewView.display?.rotation ?: android.view.Surface.ROTATION_0
         capture.targetRotation = currentRotation
 
+        // Pre-capture Autofocus & Exposure stability sequence
+        // Khóa nét vào tâm khung scan trước khi kích hoạt chụp
+        val factory = previewView.meteringPointFactory
+        val centerX = (previewView.width / 2f).coerceAtLeast(1f)
+        val centerY = (previewView.height / 2f).coerceAtLeast(1f)
+        val centerPoint = factory.createPoint(centerX, centerY)
+        val focusAction = FocusMeteringAction.Builder(centerPoint, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+            .setAutoCancelDuration(3, TimeUnit.SECONDS)
+            .build()
+
+        var hasExecuted = false
+        val executeCaptureAction = {
+            if (!hasExecuted) {
+                hasExecuted = true
+                takePictureInternal(capture, autoCrop, detectPerspective, documentType, callback)
+            }
+        }
+
+        val handler = Handler(Looper.getMainLooper())
+        val timeoutRunnable = Runnable {
+            executeCaptureAction()
+        }
+        // Timeout 600ms phòng trường hợp môi trường tối khó lock focus
+        handler.postDelayed(timeoutRunnable, 600)
+
+        try {
+            val focusFuture = cam.cameraControl.startFocusAndMetering(focusAction)
+            focusFuture.addListener({
+                handler.removeCallbacks(timeoutRunnable)
+                executeCaptureAction()
+            }, ContextCompat.getMainExecutor(context))
+        } catch (e: Exception) {
+            handler.removeCallbacks(timeoutRunnable)
+            executeCaptureAction()
+        }
+    }
+
+    private fun takePictureInternal(
+        capture: ImageCapture,
+        autoCrop: Boolean,
+        detectPerspective: Boolean,
+        documentType: String,
+        callback: (Result<Map<String, Any>>) -> Unit
+    ) {
         val rawFile = File(context.cacheDir, "raw_${UUID.randomUUID()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(rawFile).build()
 
@@ -261,7 +334,7 @@ class DocumentCameraManagerView(context: Context) : FrameLayout(context) {
 
                         val finalFile = File(context.cacheDir, "scan_${UUID.randomUUID()}.jpg")
                         FileOutputStream(finalFile).use { out ->
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out)
                         }
 
                         val resultWidth = bitmap.width.toDouble()

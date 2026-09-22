@@ -8,46 +8,46 @@ import NitroModules
 public final class DocumentOcrAnalyzer {
 
     public static func extractData(imageUri: String, documentType: String) -> ExtractedDocumentData {
-        guard let image = loadImage(uriString: imageUri),
-              let cgImage = image.cgImage else {
-            return emptyResult()
-        }
-
-        var detectedLines: [String] = []
-        let semaphore = DispatchSemaphore(value: 0)
-
-        let request = VNRecognizeTextRequest { request, error in
-            defer { semaphore.signal() }
-            guard error == nil,
-                  let observations = request.results as? [VNRecognizedTextObservation] else {
-                return
+        return autoreleasepool { () -> ExtractedDocumentData in
+            guard let image = loadImage(uriString: imageUri),
+                  let cgImage = image.cgImage else {
+                return emptyResult()
             }
 
-            for observation in observations {
-                if let topCandidate = observation.topCandidates(1).first {
-                    let text = topCandidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !text.isEmpty {
-                        detectedLines.append(text)
+            var detectedLines: [String] = []
+
+            let request = VNRecognizeTextRequest { request, error in
+                guard error == nil,
+                      let observations = request.results as? [VNRecognizedTextObservation] else {
+                    return
+                }
+
+                for observation in observations {
+                    if let topCandidate = observation.topCandidates(1).first {
+                        let text = topCandidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !text.isEmpty {
+                            detectedLines.append(text)
+                        }
                     }
                 }
             }
-        }
 
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        do {
-            try handler.perform([request])
-            semaphore.wait()
-        } catch {
-            return emptyResult()
-        }
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            do {
+                // VNImageRequestHandler.perform() chạy synchronous, không cần semaphore
+                try handler.perform([request])
+            } catch {
+                return emptyResult()
+            }
 
-        if documentType == "passport" {
-            return parsePassport(lines: detectedLines)
-        } else {
-            return parseCccd(lines: detectedLines)
+            if documentType == "passport" {
+                return parsePassport(lines: detectedLines)
+            } else {
+                return parseCccd(lines: detectedLines)
+            }
         }
     }
 

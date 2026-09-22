@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -30,7 +30,7 @@ export interface ScannerOverlayFrameProps {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
+export const ScannerOverlayFrame = React.memo<ScannerOverlayFrameProps>(({
   documentType = "cccd",
   frameOptions,
   instructionText,
@@ -39,16 +39,21 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
   showCloseButton,
   closeButtonStyle,
 }) => {
-  // Tính toán Aspect Ratio mặc định dựa theo loại giấy tờ
-  const defaultAspectRatio = documentType === "passport" ? 1.42 : 1.585;
-  const aspectRatio = frameOptions?.aspectRatio ?? defaultAspectRatio;
-
-  // Tính toán chiều rộng và chiều cao khung
-  const frameWidth =
-    typeof frameOptions?.width === "number"
-      ? frameOptions.width
-      : SCREEN_WIDTH * 0.85;
-  const frameHeight = frameWidth / aspectRatio;
+  // Tính toán Aspect Ratio và kích thước khung với useMemo để tránh re-calc mỗi render
+  const { frameWidth, frameHeight, defaultInstruction } = useMemo(() => {
+    const defaultAspectRatio = documentType === "passport" ? 1.42 : 1.585;
+    const aspectRatio = frameOptions?.aspectRatio ?? defaultAspectRatio;
+    const width =
+      typeof frameOptions?.width === "number"
+        ? frameOptions.width
+        : SCREEN_WIDTH * 0.85;
+    const height = width / aspectRatio;
+    const instruction =
+      documentType === "passport"
+        ? "Đặt trang thông tin Hộ Chiếu vào trong khung"
+        : "Đặt mặt trước/mặt sau CCCD vào trong khung";
+    return { frameWidth: width, frameHeight: height, defaultInstruction: instruction };
+  }, [documentType, frameOptions?.aspectRatio, frameOptions?.width]);
 
   const borderColor = frameOptions?.borderColor ?? "#00FF66";
   const borderWidth = frameOptions?.borderWidth ?? 3;
@@ -56,11 +61,6 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
   const cornerSize = 24;
 
   const shouldShowClose = showCloseButton ?? !!onClose;
-
-  const defaultInstruction =
-    documentType === "passport"
-      ? "Đặt trang thông tin Hộ Chiếu vào trong khung"
-      : "Đặt mặt trước/mặt sau CCCD vào trong khung";
 
   return (
     <View style={styles.container} pointerEvents="box-none">
@@ -163,7 +163,7 @@ export const ScannerOverlayFrame: React.FC<ScannerOverlayFrameProps> = ({
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

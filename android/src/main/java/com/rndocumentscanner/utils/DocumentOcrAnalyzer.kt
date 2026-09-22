@@ -16,12 +16,15 @@ import java.io.File
 
 object DocumentOcrAnalyzer {
 
+    private val recognizer by lazy {
+        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    }
+
     fun extractData(imageUri: String, documentType: String): ExtractedDocumentData {
         val bitmap = loadImage(imageUri) ?: return emptyResult()
         val rotated = rotateImageIfRequired(bitmap, imageUri)
 
         try {
-            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
             val inputImage = InputImage.fromBitmap(rotated, 0)
             val visionText: Text = Tasks.await(recognizer.process(inputImage))
 

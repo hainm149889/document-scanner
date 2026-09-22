@@ -54,14 +54,23 @@ object ImageValidator {
         val clean = if (uriString.startsWith("file://")) uriString.substring(7) else uriString
         val file = File(clean)
         if (file.exists()) {
-            return BitmapFactory.decodeFile(file.absolutePath)
+            val options = BitmapFactory.Options().apply {
+                // Downsample để tiết kiệm bộ nhớ RAM khi chỉ cần phát hiện mặt & dHash
+                inSampleSize = 2
+                inPreferredConfig = Bitmap.Config.RGB_565
+            }
+            return BitmapFactory.decodeFile(file.absolutePath, options)
         }
         try {
             val uri = Uri.parse(uriString)
             val context = NitroModules.applicationContext
             if (context != null && uri.scheme == "content") {
                 context.contentResolver.openInputStream(uri)?.use { stream ->
-                    return BitmapFactory.decodeStream(stream)
+                    val options = BitmapFactory.Options().apply {
+                        inSampleSize = 2
+                        inPreferredConfig = Bitmap.Config.RGB_565
+                    }
+                    return BitmapFactory.decodeStream(stream, null, options)
                 }
             }
         } catch (_: Exception) {}

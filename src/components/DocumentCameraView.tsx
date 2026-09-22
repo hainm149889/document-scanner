@@ -13,21 +13,19 @@ export interface DocumentCameraViewProps extends ViewProps {
 const NativeCameraView =
   requireNativeComponent<DocumentCameraViewProps>("DocumentCameraView");
 
-export const DocumentCameraView: React.FC<DocumentCameraViewProps> = ({
-  style,
-  enableFlash = false,
-  ...props
-}) => {
-  return (
-    <View style={[styles.container, style]}>
-      <NativeCameraView
-        style={StyleSheet.absoluteFill}
-        enableFlash={enableFlash}
-        {...props}
-      />
-    </View>
-  );
-};
+export const DocumentCameraView = React.memo<DocumentCameraViewProps>(
+  ({ style, enableFlash = false, ...props }) => {
+    return (
+      <View style={[styles.container, style]}>
+        <NativeCameraView
+          style={StyleSheet.absoluteFill}
+          enableFlash={enableFlash}
+          {...props}
+        />
+      </View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {
